@@ -58,7 +58,16 @@ The software [QUAST](https://quast.sourceforge.net/quast.html) is used to comput
 
 Those files are provided. The path to those files can be found in the file data/reference_LPS.txt.   
 
-**b) Nextflow configuration file (nextflow.config)**
+**b) Database files for Centrifuge and CheckM**
+
+Copy the databases folder from the RDM to your pipeline folder on the scratch space (named "dir" below):
+```
+dir=/scratch/project_mnt/SXXX/LPS_typing_pipeline
+mkdir ${dir}
+cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
+```
+
+**c) Nextflow configuration file (nextflow.config)**
 
 When a Nexflow pipeline script is launched, Nextflow looks for a file named **nextflow.config** in the current directory. The configuration file defines default parameters values for the pipeline and cluster settings such as the executor (e.g. "slurm", "local") and queues to be used (https://www.nextflow.io/docs/latest/config.html).  
 
@@ -74,7 +83,11 @@ The main.nf script contains the pipeline code and is generally not user-modifiab
 
 **1. Prepare the samplesheet file (csv)**
 
-The samplesheet file is a comma-separated values files that defines the names of the samples with their corresponding barcode and input fastq files. The header line should match the header line in the examples below:
+The samplesheet file is a comma-separated values files that defines the names of the samples with their corresponding barcode and input fastq files. The header line should match the header line in the examples below. The samplesheet can be saved in a folder named samplesheet e.g. 
+```
+mkdir /scratch/project_mnt/SXXX/LPS_typing_pipeline/samplesheet
+vim /scratch/project_mnt/SXXX/LPS_typing_pipeline/samplesheet/samples.csv
+```
 
 * **Basecalling and typing workflow** (soon)
 
@@ -101,8 +114,14 @@ The pipeline can be used to run:
 
 * **Basecalling and typing workflow** (soon)
 
-The raw ONT pod5 files must be copied in a directory (parameter "--pod5_dir"). 
+The raw ONT pod5 files must be copied in a directory (parameter "--pod5_dir").
+```
+pod5_dir=/scratch/project_mnt/SXXX/LPS_typing_pipeline/pod5
+mkdir $pod5_dir
+cp /path/to/pod5/files/ $pod5_dir
+```
 
+Then the pipeline can be launched on Bunya using the command:  
 `nextflow main.nf --samplesheet /path/to/samples.csv --pod5_dir /path/to/pod5/directory/ --outdir /path/to/outdir/ --slurm_account 'account' `
 ```
 --samplesheet: path to the samplesheet file
@@ -114,7 +133,13 @@ The raw ONT pod5 files must be copied in a directory (parameter "--pod5_dir").
 * **Typing workflow**
   
 The user must copy the basecalled files in a directory (parameter "--fqdir") and specify the path to those files in the samplesheet file (see above). 
+```
+fqdir=/scratch/project_mnt/SXXX/LPS_typing_pipeline/fastq
+mkdir $fqdir
+cp /path/to/fastq/files $fqdir
+```
 
+Then the pipeline can be launched on Bunya using the command:  
 `nextflow main.nf --samplesheet /path/to/samples.csv --fqdir /path/to/fastq/directory/ --outdir /path/to/outdir/ --slurm_account 'account'`
 ```
 --samplesheet: samplesheet file
