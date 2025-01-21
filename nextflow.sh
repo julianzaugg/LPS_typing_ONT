@@ -17,10 +17,10 @@ dir=/scratch/project_mnt/S0091/valentine/LPS/PIPELINE_ONT
 cd ${dir}
 
 #Samplesheet file
-samplesheet=${dir}/samplesheet/samples_L6.csv
+samplesheet=${dir}/samplesheet/samples_test.csv
 
 #Directory that will be created to contain the output files
-out_dir=${dir}/results_ONT_L6
+out_dir=${dir}/results_test
 
 # Bunya Slurm account 
 slurm_account='a_qcif_support'
