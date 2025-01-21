@@ -1,0 +1,3 @@
+barcode_id,sample_id,long_fastq
+barcode17,PM1947,data_runMay2024/barcode17.simplex_duplex.fastq.gz
+barcode18,PM1422,data_runMay2024/barcode18.simplex_duplex.fastq.gz
