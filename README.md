@@ -64,7 +64,7 @@ When a Nexflow pipeline script is launched, Nextflow looks for a file named **ne
 
 The pipeline uses separated Singularity containers for all processes. Nextflow will automatically pull the singularity images required to run the pipeline and cache those images in the singularity directory in the pipeline work directory by default or in the singularity.cacheDir specified in the nextflow.config file ([see documentation](https://www.nextflow.io/docs/latest/singularity.html)). Ensure that you have sufficient space in your assigned singularity directory as images can be large.   
 
-An example configuration file can be found [here](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/nextflow.config). 
+An example configuration file can be found [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.config). 
 
 **c) Nextflow main script (main.nf)**
 
