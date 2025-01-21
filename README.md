@@ -26,7 +26,7 @@ The software [QUAST](https://quast.sourceforge.net/quast.html) is used to comput
 
 ### 5. Assembly quality assessment with CheckM
 
-The software [CheckM](https://github.com/Ecogenomics/CheckM) v1 is used to compute genome assembly completeness and contamination, based on the presence or absence of marker genes. 
+The software [CheckM](https://github.com/Ecogenomics/CheckM) v1 (command [lineage_wf](https://github.com/Ecogenomics/CheckM/wiki/Workflows#lineage-specific-workflow)) is used to compute genome assembly completeness and contamination, based on the presence or absence of marker genes. 
 
 ### 6. Centrifuge taxonomy classification
 
@@ -209,3 +209,31 @@ Some parameters can be added to the command line in order to include or skip som
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
+ 
+## Structure of the output folders
+
+The pipeline will create several folders corresponding to the different steps of the pipeline. 
+* **2_nanocomp:** Quality control of the Nanopore reads  
+  * Full Nanocomp report in html format with plots and metrics table (NanoComp-report.html)    
+  * Nanocomp summary text file (NanoStats.txt)
+    
+The main output folder (`--outdir`) will contain a folder per sample (the folder is named as in the column sample_id in the samplesheet file).
+
+Each sample folder will contain the following folders:
+* **3_assembly:** Flye assembly output files (.fasta, .gfa, .gv, .info.txt), see [details](https://github.com/fenderglass/Flye/blob/flye/docs/USAGE.md#-flye-output). The final polished asssembly fasta file is sample_id_flye_polished.fasta.
+* **4_quast:** QUAST output report file (sample_id_report.tsv).
+* **5_checkm:** CheckM output file (sample_id_checkm_lineage_wf_results.tsv).  
+* **6_centrifuge:**  Centrifuge taxonomy classification results for the Nanopore reads, see [details](https://ccb.jhu.edu/software/centrifuge/manual.shtml#centrifuge-classification-output)
+  * Centrifuge classification output: classification assignments for a read (sample_id_centrifuge_species_report.tsv)
+  * Centrifuge summary output: classification summary for each genome or taxonomic unit (sample_id_centrifuge_report.tsv)
+* **7_kaptive_v3:** Kaptive output files, see [details](https://kaptive.readthedocs.io/en/latest/Outputs.html)
+    * LPS type results (sample_id_kaptive_results.tsv)
+    * LPS sequence in fasta format (sample_id_flye_polished_kaptive_results.fna)
+* **8_clair3:** Mapping files and variant calling results:
+    * Minimap2 mapping file in bam format (sample_id_minimap2_mapped.bam and .bai index). Unmapped reads were excluded.
+    * Minimap2 mapping statistics (sample_id_minimap2_flagstat.txt)  
+    * Clair3 variants (sample_id_clair3.vcf)  
+    * Clair3 variants annotated by SnpEff (sample_id_clair3.snpeff.vcf)  
+    * Frameshift and stop_gained clair3 variants (sample_id_clair3.snpeff.high_impact.vcf). 
+* **9_mlst:** MLST typing output file (sample_id_mlst_pmultocida_rirdc.csv)  
+
