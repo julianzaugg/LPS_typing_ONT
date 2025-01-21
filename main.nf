@@ -104,6 +104,7 @@ process flye {
 		tuple val(sample), path(fastq)
 	output:
 		tuple val(sample), path(fastq), path("assembly.fasta"), emit: assembly_fasta
+		tuple val(sample), path("assembly.fasta"), emit: assembly_only
 		tuple val(sample), path("assembly_info.txt"), path("assembly_graph.gfa"),path("assembly_graph.gv"), emit: assembly_graph
 		path("flye.log")
 		path("flye_version.txt")
@@ -416,13 +417,23 @@ workflow {
 	}
 	if (!params.skip_assembly) {
 		flye(ch_samplesheet_ONT)
-		medaka(flye.out.assembly_fasta)
+		if (!params.skip_polishing) {
+			medaka(flye.out.assembly_fasta)
+		}
 	}
 	if (!params.skip_quast) {
-		quast(medaka.out.polished_medaka)
+		if (!params.skip_polishing) {
+			quast(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			quast(flye.out.assembly_only)
+		}
 	}
 	if (!params.skip_checkm) {
-		checkm(medaka.out.polished_medaka)
+		if (!params.skip_polishing) {
+			checkm(medaka.out.polished_medaka)
+		}  else if (params.skip_polishing) {
+			checkm(flye.out.assembly_only)
+		}
 	}
 	if (!params.skip_centrifuge) {
 		if (!params.skip_download_centrifuge_db) {
@@ -436,10 +447,18 @@ workflow {
 		}
 	}
 	if (!params.skip_kaptive3) {
-		kaptive3(medaka.out.polished_medaka)
+		if (!params.skip_polishing) {
+			kaptive3(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			kaptive3(flye.out.assembly_only)
+		}
 	}	
 	if (!params.skip_mlst) {
-		mlst(medaka.out.polished_medaka)
+		if (!params.skip_polishing) {
+			mlst(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			mlst(flye.out.assembly_only)
+		}
 	}
 	if (!params.skip_clair3) {
 		minimap(ch_samplesheet_ONT.join(kaptive3.out.kaptive_results))
