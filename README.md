@@ -54,11 +54,7 @@ The software [QUAST](https://quast.sourceforge.net/quast.html) is used to comput
 
 ## Required input files that are provided to the user
 
-**a) Reference LPS sequence files (genbank and fasta)**
-
-Those files are provided. The path to those files can be found in the file data/reference_LPS.txt.   
-
-**b) Database files for Centrifuge and CheckM**
+**a) Database files for Centrifuge, Kaptive and CheckM**
 
 Copy the databases folder from the RDM to your pipeline folder on the scratch space (named "dir" below):
 ```
@@ -67,7 +63,7 @@ mkdir ${dir}
 cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
 ```
 
-**c) Nextflow configuration file (nextflow.config)**
+**b) Nextflow configuration file (nextflow.config)**
 
 When a Nexflow pipeline script is launched, Nextflow looks for a file named **nextflow.config** in the current directory. The configuration file defines default parameters values for the pipeline and cluster settings such as the executor (e.g. "slurm", "local") and queues to be used (https://www.nextflow.io/docs/latest/config.html).  
 
@@ -78,6 +74,10 @@ An example configuration file can be found [here](https://github.com/vmurigneu/L
 **c) Nextflow main script (main.nf)**
 
 The main.nf script contains the pipeline code and is generally not user-modifiable. 
+
+**c) Nextflow execution bash script (nextflow.sh)**
+
+This is the bash script used to launch the workflow on the HPC. This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). A template slurm script to run the pipeline on UQ HPC Bunya is provided [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh). 
 
 ## Step by step user guide
 
@@ -110,7 +110,7 @@ PM1422,fastq/barcode18.simplex_duplex.fastq.gz
 
 **2. Run the pipeline**
 
-The pipeline can be used to run:
+The pipeline will be launched on the HPC Bunya using the bash script nextflow.sh.   
 
 * **Basecalling and typing workflow** (soon)
 
@@ -121,13 +121,18 @@ mkdir $pod5_dir
 cp /path/to/pod5/files/ $pod5_dir
 ```
 
-Then the pipeline can be launched on Bunya using the command:  
+Then the command to start the pipeline is:  
 `nextflow main.nf --samplesheet /path/to/samples.csv --pod5_dir /path/to/pod5/directory/ --outdir /path/to/outdir/ --slurm_account 'account' `
 ```
 --samplesheet: path to the samplesheet file
 --outdir: path to the output directory to be created
 --pod5_dir: path to the directory containing the Nanopore pod5 files
 --slurm_account: name of the Bunya account (default='a_qcif_support') 
+```
+
+Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya using the command:
+```
+sbatch nextflow.sh
 ```
 
 * **Typing workflow**
@@ -139,13 +144,18 @@ mkdir $fqdir
 cp /path/to/fastq/files $fqdir
 ```
 
-Then the pipeline can be launched on Bunya using the command:  
+Then the command to start the pipeline is:  
 `nextflow main.nf --samplesheet /path/to/samples.csv --fqdir /path/to/fastq/directory/ --outdir /path/to/outdir/ --slurm_account 'account'`
 ```
 --samplesheet: samplesheet file
 --outdir: path to the output directory to be created
 --fqdir: path to the directory containing the Nanopore basecalled fastq files
 --slurm_account: name of the Bunya account (default='a_qcif_support') 
+```
+
+Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya using the command:
+```
+sbatch nextflow.sh
 ```
 
 ## Optional parameters
