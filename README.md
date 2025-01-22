@@ -181,7 +181,7 @@ File | Description
 [samplesheet/samples_test.csv](https://github.com/vmurigneu/LPS_typing/blob/main/samplesheet/samples_test.csv) | samplesheet for running the typing pipeline
 [nextflow.sh](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh) | Nextflow execution bash script
 
-Run the pipeline using :
+In the nextflow.sh file, you must modify the directory "dir" line 16, the Bunya Slurm account name for your group line 7 and line 26. Then you can run the pipeline using:
 `sbatch nextflow.sh`
 
 ## Optional parameters
