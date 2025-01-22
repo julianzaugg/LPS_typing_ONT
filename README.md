@@ -3,6 +3,9 @@ Bioinformatics pipeline for Pasteurella multocida LPS typing using ONT sequencin
 
   - [Overall pipeline](#Overall-pipeline)
   - [User guide](#Step-by-step-user-guide)
+  - [Example data](#Example-data)
+  - [Optional parameters](#Optional-parameters)
+  - [Output files](#structure-of-the-output-folders)
   - [Acknowledgements/citations/credits](#acknowledgements--citations--credits)
     
 ## Overall pipeline 
@@ -166,6 +169,20 @@ Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya us
 ```
 sbatch nextflow.sh
 ```
+
+## Example data
+
+To test the pipeline, we have provided some test data that contain a subset of 20,000 Nanopore reads for two samples. 
+
+File | Description
+---|---
+[fastq/barcode17.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing/blob/main/fastq/barcode17.simplex_duplex.test.fastq.gz) | ONT fastq reads for barcode17
+[fastq/barcode18.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing/blob/main/fastq/barcode18.simplex_duplex.test.fastq.gz) | ONT fastq reads for barcode18
+[samplesheet/samples_test.csv](https://github.com/vmurigneu/LPS_typing/blob/main/samplesheet/samples_test.csv) | samplesheet for running the typing pipeline
+[nextflow.sh](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh) | Nextflow execution bash script
+
+Run the pipeline using :
+`sbatch nextflow.sh`
 
 ## Optional parameters
 
