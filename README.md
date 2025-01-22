@@ -51,19 +51,22 @@ The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome
 
 The software [QUAST](https://quast.sourceforge.net/quast.html) is used to compute genome assembly metrics on the polished assemblies.  
 
+## Step by step user guide
 
-## Required input files that are provided to the user
+Some files required to use the pipeline are provided to the user (see sections 1a, 1b and 2 below). Additional files must be created/modified by the user (see sections 1c, 3, 4 below). 
 
-**a) Database files for Centrifuge, Kaptive and CheckM**
+**1) Clone the Github pipeline repository**
 
-Copy the databases folder from the RDM to your pipeline folder on the scratch space (named "dir" below):
+Navigate to a folder to your scratch space where you would like to run the pipeline (e.g. $raw_dir below) and clone the pipeline repository to import the required files: 
 ```
-dir=/scratch/project_mnt/SXXX/LPS_typing_pipeline
-mkdir ${dir}
-cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
+raw_dir=/scratch/project_mnt/SXXX/PIPELINE
+cd $raw_dir
+git clone https://github.com/vmurigneu/LPS_typing.git
 ```
 
-**b) Nextflow configuration file (nextflow.config)**
+It will create a repository called "LPS_typing". The following three files can be found in the pipeline repository:
+
+- **a) Nextflow configuration file (nextflow.config)**  
 
 When a Nexflow pipeline script is launched, Nextflow looks for a file named **nextflow.config** in the current directory. The configuration file defines default parameters values for the pipeline and cluster settings such as the executor (e.g. "slurm", "local") and queues to be used (https://www.nextflow.io/docs/latest/config.html).  
 
@@ -71,17 +74,23 @@ The pipeline uses separated Singularity containers for all processes. Nextflow w
 
 An example configuration file can be found [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.config). 
 
-**c) Nextflow main script (main.nf)**
+- **b) Nextflow main script (main.nf)**
 
 The main.nf script contains the pipeline code and is generally not user-modifiable. 
 
-**c) Nextflow execution bash script (nextflow.sh)**
+- **c) Nextflow execution bash script (nextflow.sh)**
 
-This is the bash script used to launch the workflow on the HPC. This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). A template slurm script to run the pipeline on UQ HPC Bunya is provided [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh). 
+This is the bash script used to launch the workflow on the HPC. The template slurm script provided can be used to launch the pipeline on UQ HPC Bunya and is available [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh). This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). 
 
-## Step by step user guide
+**2. Database files for Centrifuge, Kaptive, Minimap2 and CheckM**
 
-**1. Prepare the samplesheet file (csv)**
+Copy the databases folder from the RDM to the cloned pipeline repository on the scratch space (named "dir" below):
+```
+dir=/scratch/project_mnt/SXXX/PIPELINE/LPS_typing
+cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
+```
+
+**3. Prepare the samplesheet file (csv)**
 
 The samplesheet file is a comma-separated values files that defines the names of the samples with their corresponding barcode and input fastq files. The header line should match the header line in the examples below. The samplesheet can be saved in a folder named samplesheet e.g. 
 ```
@@ -108,7 +117,7 @@ PM1947,fastq/barcode17.simplex_duplex.fastq.gz
 PM1422,fastq/barcode18.simplex_duplex.fastq.gz
 ```
 
-**2. Run the pipeline**
+**4. Run the pipeline**
 
 The pipeline will be launched on the HPC Bunya using the bash script nextflow.sh.   
 
