@@ -198,7 +198,7 @@ Some parameters can be added to the command line in order to include or skip som
 * `--nanocomp_threads`: number of threads for the Nanocomp step (default=4)
 
 3. Genome assembly and polishing:
-* `--skip_assembly`: skip the assembly step (default=false)
+* `--skip_assembly`: skip the assembly step (default=false). Note: it is not recommended to skip assembly as many steps in the downstream processing depends on the assembly results.   
 * `--flye_args`: Flye optional parameters (default="--asm-coverage 100"), see [available parameters](https://github.com/mikolmogorov/Flye/blob/flye/docs/USAGE.md#-quick-usage)
 * `--flye_threads`: number of threads for the assembly (default=4)
 * `--genome_size`: estimated genome size (default="2.3M")
