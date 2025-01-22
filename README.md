@@ -53,7 +53,7 @@ The software [QUAST](https://quast.sourceforge.net/quast.html) is used to comput
 
 ## Step by step user guide
 
-Some files required to use the pipeline are provided to the user (see sections 1a, 1b and 2 below). Additional files must be created/modified by the user (see sections 1c, 3, 4 below). 
+Some files required to use the pipeline are provided to the user (see sections 1a, 1b and 2 below). Additional files must be created/modified by the user (see sections 1c, 3 and 4 below). 
 
 **1) Clone the Github pipeline repository**
 
@@ -82,7 +82,7 @@ The main.nf script contains the pipeline code and is generally not user-modifiab
 
 This is the bash script used to launch the workflow on the HPC. The template slurm script provided can be used to launch the pipeline on UQ HPC Bunya and is available [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh). This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). 
 
-**2. Database files for Centrifuge, Kaptive, Minimap2 and CheckM**
+**2) Database files for Centrifuge, Kaptive, Minimap2 and CheckM**
 
 Copy the databases folder from the RDM to the cloned pipeline repository on the scratch space (named "dir" below):
 ```
@@ -90,7 +90,7 @@ dir=/scratch/project_mnt/SXXX/PIPELINE/LPS_typing
 cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
 ```
 
-**3. Prepare the samplesheet file (csv)**
+**3) Prepare the samplesheet file (csv)**
 
 The samplesheet file is a comma-separated values files that defines the names of the samples with their corresponding barcode and input fastq files. The header line should match the header line in the examples below. The samplesheet can be saved in a folder named samplesheet e.g. 
 ```
@@ -117,7 +117,7 @@ PM1947,fastq/barcode17.simplex_duplex.fastq.gz
 PM1422,fastq/barcode18.simplex_duplex.fastq.gz
 ```
 
-**4. Run the pipeline**
+**4) Run the pipeline**
 
 The pipeline will be launched on the HPC Bunya using the bash script nextflow.sh.   
 
