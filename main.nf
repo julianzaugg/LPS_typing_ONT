@@ -224,7 +224,7 @@ process centrifuge {
         cpus "${params.centrifuge_threads}"
         tag "${sample}"
         label "cpu"
-        label "very_high_memory"
+        label "high_memory"
         publishDir "$params.outdir/$sample/6_centrifuge",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
         publishDir "$params.outdir/$sample/6_centrifuge",  mode: 'copy', pattern: "*.tsv", saveAs: { filename -> "${sample}_$filename" }
         input:
@@ -441,7 +441,7 @@ workflow {
 			centrifuge_download_db(ch_centrifuge_db)
 			centrifuge(ch_samplesheet_ONT.combine(centrifuge_download_db.out.centrifuge_db))
 		} else if (params.skip_download_centrifuge_db) {	
-			ch_centrifuge_db=Channel.fromPath( "${params.centrifuge_db}" ).collect()
+			ch_centrifuge_db=Channel.fromPath( "${params.outdir}/../databases/centrifuge/*.cf" ).collect()
 			ch_centrifuge_db.view()
 			centrifuge(ch_samplesheet_ONT.combine(ch_centrifuge_db))
 		}
