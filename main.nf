@@ -194,7 +194,7 @@ process checkm {
         !params.skip_checkm
         script:
         """
-        export CHECKM_DATA_PATH=/scratch/project_mnt/S0091/sw/CheckM-1.2.2
+        export CHECKM_DATA_PATH=${params.checkm_db}
         checkm data setRoot ${params.checkm_db}
         checkm lineage_wf --reduced_tree `dirname ${assembly}` \$PWD --threads ${params.threads} --pplacer_threads ${params.threads} --tab_table -f checkm_lineage_wf_results.tsv -x fasta
         cp .command.log checkm.log
@@ -341,7 +341,7 @@ process snpeff {
 	mkdir -p L3_P1059_H3_snpeffdb
 	mkdir -p snpeff_output/L3_P1059_H3_snpeffdb
 	mkdir -p data/L3_P1059_H3_snpeffdb
-	ln -s $ref_gb snpeff_output/L3_P1059_H3_snpeffdb/genes.gbk
+	cp $ref_gb snpeff_output/L3_P1059_H3_snpeffdb/genes.gbk
 	snpEff build -v -configOption 'L3_P1059_H3_snpeffdb'.genome='L3_P1059_H3_snpeffdb' -configOption 'L3_P1059_H3_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output L3_P1059_H3_snpeffdb
 	mv snpeff_output/'L3_P1059_H3_snpeffdb'/*.bin data/'L3_P1059_H3_snpeffdb'
 	cp /usr/local/share/snpeff-4.3-2/snpEff.config snpEff.config
@@ -441,7 +441,7 @@ workflow {
 			centrifuge_download_db(ch_centrifuge_db)
 			centrifuge(ch_samplesheet_ONT.combine(centrifuge_download_db.out.centrifuge_db))
 		} else if (params.skip_download_centrifuge_db) {	
-			ch_centrifuge_db=Channel.fromPath( "${params.outdir}/data/*.cf" ).collect()
+			ch_centrifuge_db=Channel.fromPath( "${params.centrifuge_db}" ).collect()
 			ch_centrifuge_db.view()
 			centrifuge(ch_samplesheet_ONT.combine(ch_centrifuge_db))
 		}
