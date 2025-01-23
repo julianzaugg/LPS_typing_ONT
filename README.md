@@ -209,26 +209,26 @@ Some parameters can be added to the command line in order to include or skip som
 
 5. Assembly quality assessment with CheckM:
 * `--skip_checkm`: skip the CheckM step (default=false)
-* `--checkm_db`: path to the CheckM database folder (default="/scratch/project_mnt/S0091/sw/CheckM-1.2.2")
+* `--checkm_db`: path to the CheckM database folder (default="../../../databases/CheckM-1.2.2")
 
 6. Centrifuge taxonomy classification:
 * `--skip_centrifuge`: skip the Centrifuge classification step (default=false)
 * `--skip_download_centrifuge_db`: skip the Centrifuge database downloading step (default=true)
 * `--centrifuge_db_download_file`: link to the centrifuge database file to be downloaded (default= 'https://genome-idx.s3.amazonaws.com/centrifuge/nt_2018_3_3.tar.gz')
-* `--centrifuge_db`: (default= '/scratch/project_mnt/S0091/valentine/LPS/PIPELINE_ONT/data/nt.*.cf')
+* `--centrifuge_db`: (default= '../../../databases/centrifuge/nt.*.cff')
 * `--centrifuge_threads`: number of threads for Centrifuge classification step (default=6)
 
 7. LPS typing using Kaptive:
 * `--skip_kaptive3`: skip the Kaptive typing step (default=false)
-* `--kaptive_db_9lps`: path to the Kaptive database file (default="/scratch/project/qcifbioinfo/valentine/LPS/DATA/LPS/v1_kaptive3/9lps.gbk")
+* `--kaptive_db_9lps`: path to the Kaptive database file (default="../../../databases/v1_kaptive3/9lps.gbk")
 
 8. Variant calling using Clair3:
 * `--skip_clair3`: skip the variant calling step (default=false)
 * `--minimap_threads`: number of threads for the Minimap2 mapping step (default=6)
 * `--clair3_threads`: number of threads for the Clair3 variant calling step (default=4)
-* `--clair3_model`: path to the clair3 model folder (default="/scratch/project/qcifbioinfo/valentine/LPS/sw/clair3_models/r1041_e82_400bps_sup_v500")
+* `--clair3_model`: path to the clair3 model folder (default="../../../databases/clair3_models/r1041_e82_400bps_sup_v500")
 * `--skip_snpeff`: skip the variant annotation step (default=false)
-* `--reference_LPS`: path to the file summarising the reference LPS sequence files (default="/scratch/project_mnt/S0091/valentine/LPS/PIPELINE/data/reference_LPS.txt")
+* `--reference_LPS`: path to the file summarising the reference LPS sequence files (default="../../../databases/reference_LPS.txt")
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
