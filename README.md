@@ -50,9 +50,6 @@ The LPS type of the sample is obtained using the software [Kaptive](https://kapt
 
 The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome assemblies against the  PubMLST typing scheme "pmultocida_2".    
 
-### 10. 	Assembly quality assessment with QUAST
-
-The software [QUAST](https://quast.sourceforge.net/quast.html) is used to compute genome assembly metrics on the polished assemblies.  
 
 ## Step by step user guide
 
