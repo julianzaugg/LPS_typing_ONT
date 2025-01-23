@@ -94,8 +94,8 @@ cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
 
 The samplesheet file is a comma-separated values files that defines the names of the samples with their corresponding barcode and input fastq files. The header line should match the header line in the examples below. The samplesheet can be saved in a folder named samplesheet e.g. 
 ```
-mkdir /scratch/project_mnt/SXXX/LPS_typing_pipeline/samplesheet
-vim /scratch/project_mnt/SXXX/LPS_typing_pipeline/samplesheet/samples.csv
+mkdir /scratch/project_mnt/SXXX/LPS_typing/samplesheet
+vim /scratch/project_mnt/SXXX/LPS_typing/samplesheet/samples.csv
 ```
 
 * **Basecalling and typing workflow** (soon)
