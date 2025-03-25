@@ -135,7 +135,7 @@ Then the command to start the pipeline is:
 --samplesheet: path to the samplesheet file
 --outdir: path to the output directory to be created
 --pod5_dir: path to the directory containing the Nanopore pod5 files
---slurm_account: name of the Bunya account (default='a_qcif_support') 
+--slurm_account: name of the Bunya account (default='a_uqds') 
 ```
 
 Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya using the command:
@@ -158,8 +158,11 @@ Then the command to start the pipeline is:
 --samplesheet: samplesheet file
 --outdir: path to the output directory to be created
 --fqdir: path to the directory containing the Nanopore basecalled fastq files
---slurm_account: name of the Bunya account (default='a_qcif_support') 
+--slurm_account: name of the Bunya account (default='a_uqds') 
 ```
+
+Note: to run the assembly and assembly metrics steps only (skip LPS typing and variant calling):  
+`nextflow main.nf --samplesheet /path/to/samples.csv --fqdir /path/to/fastq/directory/ --outdir /path/to/outdir/ --slurm_account 'account' --skip_kaptive3 --skip_clair3`
 
 Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya using the command:
 ```
