@@ -232,7 +232,8 @@ Some parameters can be added to the command line in order to include or skip som
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
- 
+* `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
+
 ## Structure of the output folders
 
 The pipeline will create several folders corresponding to the different steps of the pipeline. 
@@ -258,5 +259,5 @@ Each sample folder will contain the following folders:
     * Clair3 variants (sample_id_clair3.vcf)  
     * Clair3 variants annotated by SnpEff (sample_id_clair3.snpeff.vcf)  
     * Frameshift and stop_gained clair3 variants (sample_id_clair3.snpeff.high_impact.vcf). 
-* **9_mlst:** MLST typing output file (sample_id_mlst_pmultocida_rirdc.csv)  
+* **9_mlst:** MLST typing output file (sample_id_mlst.csv)  
 
