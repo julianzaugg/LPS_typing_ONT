@@ -1,0 +1,154 @@
+// Singularity containter cache. Change this as appropriate
+singularity {
+	cacheDir = "/scratch/project_mnt/S0091/valentine/LPS/PIPELINE/singularity"
+	runOptions ="--no-home"
+	singularity.enabled = true
+	singularity.autoMounts = true
+	//singularity.autoMounts = false
+    	//runOptions = "-B \"$launchDir\" $mounts.datadir $mounts.outdir"
+}
+
+// ensure that no user libraries get mounted into the container
+process.containerOptions = "--no-home"
+
+env {
+    PYTHONNOUSERSITE = 1
+}
+
+// Default parameters. Commandline parameters will take priority over these
+params {
+        slurm_account= 'a_qcif_support'
+	outdir = './results'
+	threads = 4
+	skip_basecalling = true
+	pod5_dir = false
+	basecalling_model = "sup"
+	barcoding_kit = "SQK-NBD114-24"
+	skip_nanocomp = false
+	nanocomp_threads = 4
+	skip_assembly = false
+	flye_threads = 4
+	flye_args = "--asm-coverage 100"
+	genome_size = "2.3M"
+	skip_polishing= false
+	medaka_threads = 8
+	//ensure the correct nedaka model is indicated below and matches the guppy/dorado basecalling model
+	medaka_model = "r1041_e82_400bps_sup_v5.0.0"
+	skip_quast= false
+	quast_threads = 2
+	skip_checkm = false
+	//checkm_db = "/scratch/project_mnt/S0091/sw/CheckM-1.2.2"	
+	checkm_db = './databases/CheckM-1.2.2'
+	skip_centrifuge = false
+	skip_download_centrifuge_db = true
+	centrifuge_threads = 6
+	centrifuge_db_download_file = 'https://genome-idx.s3.amazonaws.com/centrifuge/nt_2018_3_3.tar.gz'
+	//centrifuge_db = '/scratch/project_mnt/S0091/valentine/LPS/PIPELINE_ONT/data/nt.*.cf'
+	centrifuge_db = './databases/centrifuge/nt.*.cf'
+	skip_kaptive3 = false
+	//kaptive_db_9lps = "/scratch/project/qcifbioinfo/valentine/LPS/DATA/LPS/v1_kaptive3/9lps.gbk"
+	kaptive_db_9lps = './databases/v1_kaptive3/9lps.gbk'
+	//kaptive_v3_db = "/scratch/project/qcifbioinfo/valentine/LPS/DATA/LPS/gb_22lps/22lps.gb"
+	minimap_threads = 6
+	//reference_LPS= "/scratch/project_mnt/S0091/valentine/LPS/PIPELINE/data/reference_LPS.txt"
+	reference_LPS='./databases/reference_LPS.txt'
+	skip_clair3 = false
+	//clair3_model = "/scratch/project/qcifbioinfo/valentine/LPS/sw/clair3_models/r1041_e82_400bps_sup_v500"
+	clair3_model='./databases/clair3_models/r1041_e82_400bps_sup_v500'
+	clair3_threads = 4
+	skip_snpeff = false
+	skip_mlst = false
+}
+
+// Process settings. Set job scheduler if appropriate (SLURM, PBS e.g.)
+// If your job scheduler has different queues/partitions for cpu and gpu, please also set them here
+process {
+        // ensure that no user libraries get mounted into the container
+        //containerOptions = '--no-home'
+        executor='slurm'
+        withLabel: cpu {
+                clusterOptions = "--partition=general --account='${params.slurm_account}'"
+        }
+        //clusterOptions = "--account='${params.slurm_account}'"
+        time = '6h'
+        withName: 'centrifuge|minimap|flye|medaka' {
+                time = '26h'
+        }
+        withLabel: gpu {
+                clusterOptions = "--partition=gpu_cuda --qos=gpu --gres=gpu:h100:3 --account='${params.slurm_account}'"
+        }
+        withLabel: high_memory {
+                        memory = '150GB'
+                        time = '8h'
+                }
+        withLabel: very_high_memory {
+                        memory = 300.GB
+                }
+        withName: 'centrifuge' {
+                maxForks = 1
+                }
+}
+
+mounts {
+        outdir = "-B \"`[[ \"${params.outdir}\" =~ ^/ ]] && echo ${params.outdir} || echo ${PWD}/${params.outdir}`\""
+        //datadir = "-B \"`[[ \"${params.datadir}\" =~ ^/ ]] && echo ${params.datadir} || echo ${PWD}/${params.datadir}`\""
+}
+
+// Not generally user-modifiable !!!
+process {
+	withLabel: high_memory { memory = 200.GB }
+	withLabel: very_high_memory { memory = 300.GB }
+	withName: basecalling2 { container = 'docker://quay.io/staphb/dorado:0.8.3' }
+	withName: pod5 { container = 'docker://quay.io/biocontainers/pod5:0.3.15--pyhdfd78af_0' }
+	withName: fastp { container = 'docker://quay.io/biocontainers/fastp:0.24.0--heae3180_1' }
+	withName: fastqc { container = 'docker://quay.io/biocontainers/fastqc:0.12.1--hdfd78af_0'  }
+	withName: shovill { container = 'docker://quay.io/biocontainers/shovill:1.1.0--hdfd78af_1' }
+	withName: checkm { container = 'docker://quay.io/staphb/checkm:1.2.2' }
+	withName: centrifuge { container = 'docker://quay.io/biocontainers/centrifuge:1.0.4.2--h077b44d_1' } 
+	withName: kraken { container = 'docker://quay.io/biocontainers/kraken2:2.1.3--pl5321h077b44d_4' }
+	withName: bracken { container = 'docker://quay.io/biocontainers/bracken:3.0--h9948957_2' }
+	withName: kaptive { container = 'docker://quay.io/biocontainers/kaptive:2.0.6--hdfd78af_0' }
+	withName: kaptive3 { container = 'docker://quay.io/biocontainers/kaptive:3.0.0b6--pyhdfd78af_0' }
+	//withName: porechop { container = 'docker://quay.io/biocontainers/porechop:0.2.4--py310h30d9df9_3' }
+	withName: minimap { container = 'docker://quay.io/schandry_containers/minimap2-samtools:latest' }
+	withName: flye { container = 'docker://quay.io/biocontainers/flye:2.9.5--py39h475c85d_2' }
+	withName: medaka { container = 'docker://quay.io/biocontainers/medaka:2.0.1--py39hf77f13f_0' }
+	withName: clair3 { container = 'docker://quay.io/biocontainers/clair3:1.0.10--py39hd649744_1' }
+	withName: snpeff { container = 'docker://quay.io/biocontainers/snpeff:4.3--2' }
+	withName: snpsift { container = 'docker://quay.io/biocontainers/snpsift:4.3--py35_2' }
+	//to test if includes already snpsift withName: snpeff { container = 'docker://quay.io/jaxcompsci/snpeff_snpsift_5.1:v5.1d' }
+	withName: quast { container = 'docker://quay.io/biocontainers/quast:5.2.0--py39pl5321h4e691d4_3' } 
+	withName: nanocomp { container = 'docker://quay.io/biocontainers/nanocomp:1.24.2--pyhdfd78af_0' }
+	withName: mlst { container = 'docker://quay.io/biocontainers/mlst:2.23.0--hdfd78af_0' }
+}
+
+// Debug and report options
+trace {
+  enabled = true
+  file = "${params.outdir}/trace.txt"
+  overwrite = true
+}
+timeline {
+  enabled = true
+  file = "${params.outdir}/timeline.html"
+  overwrite = true
+}
+report {
+  enabled = true
+  file = "${params.outdir}/report.html"
+  overwrite = true
+}
+dag {
+  enabled = true
+  file = "${params.outdir}/flowchart_dag.svg"
+  overwrite = true
+}
+
+manifest {
+  name = ''
+  author = 'Valentine Murigneux'
+  description = 'Pasteurella multocida LPS typing pipeline'
+  mainScript = 'main.nf'
+  version = '0.1'
+}
+
