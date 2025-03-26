@@ -261,7 +261,14 @@ Each sample folder will contain the following folders:
     * Clair3 variants (sample_id_clair3.vcf)  
     * Clair3 variants annotated by SnpEff (sample_id_clair3.snpeff.vcf)  
     * Frameshift and stop_gained clair3 variants (sample_id_clair3.snpeff.high_impact.vcf). 
-* **9_mlst:** MLST typing output file (sample_id_mlst.csv)  
+* **9_mlst:** MLST typing output file (sample_id_mlst.csv)
+* **10_report:** Summary of results for all samples
+    * Checkm results (5_checkm_lineage_wf_results.tsv)  
+    * Centrifuge taxonomy results (6_centrifuge_pasteurella_multocida_species_abundance.tsv)  
+    * Kaptive results (7_kaptive_results.tsv)  
+    * Clair3 variants results (8_clair3_snpeff_high_impact.vcf)  
+    * MLST results (9_mlst.csv)  
+    * Genotype results summarising the variants found in the genotype database (10_genotype_report.tsv)
 
 ## Running the workflow in assembly mode for other organisms
 The default parameters are suited for Pasteurella multocida. The LPS typing and variant calling are specific to Pasteurella multocida. Here are the paraneters to use the workflow to assemble another species:  
