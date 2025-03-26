@@ -48,8 +48,7 @@ The LPS type of the sample is obtained using the software [Kaptive](https://kapt
 
 ### 9. 	MLST typing
 
-The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome assemblies against the  PubMLST typing scheme "pmultocida_2".    
-
+The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome assemblies against the  PubMLST typing scheme "pmultocida_2" by default (RIRDC). The typing scheme can be modified by specifying the parameter --mlst_scheme (e.g. --mlst_scheme "pmultocida").   
 
 ## Step by step user guide
 
@@ -136,7 +135,7 @@ Then the command to start the pipeline is:
 --samplesheet: path to the samplesheet file
 --outdir: path to the output directory to be created
 --pod5_dir: path to the directory containing the Nanopore pod5 files
---slurm_account: name of the Bunya account (default='a_qcif_support') 
+--slurm_account: name of the Bunya account (default='a_uqds') 
 ```
 
 Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya using the command:
@@ -159,8 +158,11 @@ Then the command to start the pipeline is:
 --samplesheet: samplesheet file
 --outdir: path to the output directory to be created
 --fqdir: path to the directory containing the Nanopore basecalled fastq files
---slurm_account: name of the Bunya account (default='a_qcif_support') 
+--slurm_account: name of the Bunya account (default='a_uqds') 
 ```
+
+Note: to run the assembly and assembly metrics steps only (skip LPS typing and variant calling):  
+`nextflow main.nf --samplesheet /path/to/samples.csv --fqdir /path/to/fastq/directory/ --outdir /path/to/outdir/ --slurm_account 'account' --skip_kaptive3 --skip_clair3`
 
 Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya using the command:
 ```
@@ -232,7 +234,8 @@ Some parameters can be added to the command line in order to include or skip som
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
- 
+* `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
+
 ## Structure of the output folders
 
 The pipeline will create several folders corresponding to the different steps of the pipeline. 
@@ -258,5 +261,12 @@ Each sample folder will contain the following folders:
     * Clair3 variants (sample_id_clair3.vcf)  
     * Clair3 variants annotated by SnpEff (sample_id_clair3.snpeff.vcf)  
     * Frameshift and stop_gained clair3 variants (sample_id_clair3.snpeff.high_impact.vcf). 
-* **9_mlst:** MLST typing output file (sample_id_mlst_pmultocida_rirdc.csv)  
+* **9_mlst:** MLST typing output file (sample_id_mlst.csv)  
+
+## Running the workflow in assembly mode for other organisms
+The default parameters are suited for Pasteurella multocida. The LPS typing and variant calling are specific to Pasteurella multocida. Here are the paraneters to use the workflow to assemble another species:  
+* `--genome_size`: estimated genome size (default="2.3M")
+* `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
+* `--skip_kaptive3`: skip the Kaptive typing step (default=false)
+* `--skip_clair3`: skip the variant calling step (default=false)
 
