@@ -221,7 +221,7 @@ Some parameters can be added to the command line in order to include or skip som
 * `--centrifuge_threads`: number of threads for Centrifuge classification step (default=6)
 
 7. LPS typing using Kaptive:
-* `--skip_kaptive3`: skip the Kaptive typing step (default=false)
+* `--skip_kaptive3`: skip the Kaptive typing step (default=false). note: it will automatically skip the variant calling step.  
 * `--kaptive_db_9lps`: path to the Kaptive database file (default="../../../databases/v1_kaptive3/9lps.gbk")
 
 8. Variant calling using Clair3:
