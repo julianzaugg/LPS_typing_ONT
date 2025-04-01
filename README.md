@@ -124,9 +124,9 @@ The pipeline will be launched on the HPC Bunya using the bash script nextflow.sh
 
 The raw ONT pod5 files must be copied in a directory (parameter "--pod5_dir").
 ```
-pod5_dir=/scratch/project_mnt/SXXX/LPS_typing_pipeline/pod5
-mkdir $pod5_dir
-cp /path/to/pod5/files/ $pod5_dir
+pod5=/scratch/project_mnt/SXXX/LPS_typing_pipeline/pod5
+mkdir $pod5
+cp /path/to/pod5/files/ $pod5
 ```
 
 Then the command to start the pipeline is:  
@@ -147,9 +147,9 @@ sbatch nextflow.sh
   
 The user must copy the basecalled files in a directory (parameter "--fqdir") and specify the path to those files in the samplesheet file (see above). 
 ```
-fqdir=/scratch/project_mnt/SXXX/LPS_typing_pipeline/fastq
-mkdir $fqdir
-cp /path/to/fastq/files $fqdir
+fastq=/scratch/project_mnt/SXXX/LPS_typing_pipeline/fastq
+mkdir $fastq
+cp /path/to/fastq/files $fastq
 ```
 
 Then the command to start the pipeline is:  
