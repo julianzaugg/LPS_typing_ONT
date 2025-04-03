@@ -439,7 +439,7 @@ process report {
 		while IFS=\$'\t' read db_LPStype db_genotype db_isolate db_chrom db_pos db_type db_ref db_alt db_gene; do 
 			if [[ \$chrom == \$db_chrom && \$pos == \$db_pos ]]; then
 				if [[ \$sample != "SAMPLEID" ]]; then
-					echo "sample" \$sample": found genotype" \$db_genotype "with" \$db_type >> 10_genotype_report.tsv
+					echo "sample" \$sample": found genotype" \$db_genotype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_genotype_report.tsv
 				fi
 			fi
 			done < ${params.genotype_db}
