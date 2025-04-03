@@ -387,16 +387,16 @@ process snpeff {
 	'''
 	locus=`tail -1 !{kaptive_report} | cut -f3`
 	ref_gb=`grep ${locus:0:2} !{params.reference_LPS} | cut -f2`
-	mkdir -p L3_P1059_H3_snpeffdb
-	mkdir -p snpeff_output/L3_P1059_H3_snpeffdb
-	mkdir -p data/L3_P1059_H3_snpeffdb
-	cp $ref_gb snpeff_output/L3_P1059_H3_snpeffdb/genes.gbk
-	snpEff build -v -configOption 'L3_P1059_H3_snpeffdb'.genome='L3_P1059_H3_snpeffdb' -configOption 'L3_P1059_H3_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output L3_P1059_H3_snpeffdb
-	mv snpeff_output/'L3_P1059_H3_snpeffdb'/*.bin data/'L3_P1059_H3_snpeffdb'
+	mkdir -p LPS_snpeffdb
+	mkdir -p snpeff_output/LPS_snpeffdb
+	mkdir -p data/LPS_snpeffdb
+	cp $ref_gb snpeff_output/LPS_snpeffdb/genes.gbk
+	snpEff build -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output LPS_snpeffdb
+	mv snpeff_output/'LPS_snpeffdb'/*.bin data/'LPS_snpeffdb'
 	cp /usr/local/share/snpeff-4.3-2/snpEff.config snpEff.config
-	echo 'L3_P1059_H3_snpeffdb.genome : L3_P1059_H3_snpeffdb' >> snpEff.config
-	echo 'L3_P1059_H3_snpeffdb.codonTable : Bacterial_and_Plant_Plastid' >> snpEff.config
-	snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'L3_P1059_H3_snpeffdb'.genome='L3_P1059_H3_snpeffdb' -configOption 'L3_P1059_H3_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html L3_P1059_H3_snpeffdb !{vcf} > clair3.snpeff.vcf
+	echo 'LPS_snpeffdb.genome : LPS_snpeffdb' >> snpEff.config
+	echo 'LPS_snpeffdb.codonTable : Bacterial_and_Plant_Plastid' >> snpEff.config
+	snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb !{vcf} > clair3.snpeff.vcf
 	cp .command.log snpeff.log
 	'''
 }
@@ -434,6 +434,7 @@ process report {
 	echo -e  SAMPLEID\\\tCHROM\\\tPOS\\\tID\\\tREF\\\tALT\\\tQUAL\\\tFILTER\\\tINFO\\\tFORMAT\\\tSAMPLE > header_clair3
 	for file in `ls *_clair3.snpeff.high_impact.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.high_impact.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff_high_impact.vcf.tmp; done
 	cat header_clair3 8_clair3_snpeff_high_impact.vcf.tmp > 8_clair3_snpeff_high_impact.vcf
+	touch 10_genotype_report.tsv
 	while IFS=\$'\t' read sample chrom pos id ref alt qual filter info format formatsample; do
 		while IFS=\$'\t' read db_LPStype db_genotype db_isolate db_chrom db_pos db_type db_ref db_alt db_gene; do 
 			if [[ \$chrom == \$db_chrom && \$pos == \$db_pos ]]; then
