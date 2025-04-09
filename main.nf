@@ -84,7 +84,7 @@ process nanocomp {
 	"""
 	echo ${fastq_files} > fastq_files.txt
 	echo ${sampleID_list} > sampleID_list.txt
-	sed  "s/\\[//" sampleID_list.txt | sed "s/\\]//" | sed "s/\\,//" > sample_list
+	sed  "s/\\[//" sampleID_list.txt | sed "s/\\]//" | sed "s/\\,//g" > sample_list
 	sampleID_list_names=\$(cat "sample_list")
 	NanoComp -o \$PWD --fastq ${fastq_files} -t ${params.threads} -n \${sampleID_list_names}
 	cp .command.log nanocomp.log
@@ -102,13 +102,15 @@ process flye {
 	label "cpu"
 	publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
 	publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "assembly*", saveAs: { filename -> "${sample}_$filename" }
-	publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*txt", saveAs: { filename -> "${sample}_$filename" }
+	publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*version.txt", saveAs: { filename -> "${sample}_$filename" }
+	publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*info.txt"
 	input:
 		tuple val(sample), path(fastq)
 	output:
 		tuple val(sample), path(fastq), path("assembly.fasta"), emit: assembly_fasta
 		tuple val(sample), path("assembly.fasta"), emit: assembly_only
-		tuple val(sample), path("assembly_info.txt"), path("assembly_graph.gfa"),path("assembly_graph.gv"), emit: assembly_graph
+		tuple val(sample), path("*assembly_info.txt"), path("assembly_graph.gfa"),path("assembly_graph.gv"), emit: assembly_graph
+		path("*assembly_info.txt"), emit: assembly_info	
 		path("flye.log")
 		path("flye_version.txt")
 	when:
@@ -125,6 +127,7 @@ process flye {
 	else
 		touch assembly.fasta assembly_info.txt assembly_graph.gfa assembly_graph.gv
 	fi
+	mv assembly_info.txt !{sample}_assembly_info.txt
 	flye -v 2> flye_version.txt
 	cp .command.log flye.log
 	'''  
@@ -193,6 +196,28 @@ process summary_quast {
 	"""
 	for file in `ls *report.tsv`; do cut -f2 \$file > \$file.tmp.txt; cut -f1 \$file > rownames.txt; done
 	paste rownames.txt *tmp.txt > 4_quast_report.tsv
+	"""
+}
+
+process summary_flye {
+	publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*tsv'
+	input:
+		path(flye_info_files)
+	output:
+		path("3_flye_stats.tsv"), emit: flye_summary
+	script:
+	"""
+	echo -e "sample\tasssembly_coverage\tnb_contigs\tassembly_size" > 3_flye_stats.tsv
+	for file in `ls *info.txt`; do
+		fileName=\$(basename \$file)
+		sample=\${fileName%%_assembly_info.txt}
+		grep -v length \$file > tmp
+		total_length=`awk '{total_length+=\$2} END {print total_length}' tmp`
+		total_cov=`awk '{total_cov+=\$2*\$3} END {print total_cov}' tmp`
+		mean_cov=\$((\$total_cov/\$total_length))
+		nb_contigs=`grep contig \$file | wc -l`
+		echo -e \$sample\\\t\$mean_cov\\\t\$nb_contigs\\\t\$total_length  >> 3_flye_stats.tsv
+	done
 	"""
 }
 
@@ -525,6 +550,7 @@ workflow {
 			if (!params.skip_polishing) {
 				medaka(flye.out.assembly_fasta)
 			}
+			summary_flye(flye.out.assembly_info.collect())
 		}
 		if (!params.skip_quast) {
 			if (!params.skip_polishing) {
