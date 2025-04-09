@@ -359,7 +359,6 @@ process clair3 {
         !params.skip_clair3
         shell:
         '''
-        set +eu
 	locus=`tail -1 !{kaptive_report} | cut -f3`
 	ref_gb=`grep ${locus:0:2} !{params.reference_LPS} | cut -f2`
 	ref_fasta=`grep ${locus:0:2} !{params.reference_LPS} | cut -f3`
@@ -442,7 +441,7 @@ process report {
 					echo "sample" \$sample": found genotype" \$db_genotype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_genotype_report.tsv
 				fi
 			fi
-			done < ${params.genotype_db}
+		done < ${params.genotype_db}
 	done < 8_clair3_snpeff_high_impact.vcf
 	"""
 }
