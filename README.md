@@ -263,6 +263,8 @@ Each sample folder will contain the following folders:
     * Frameshift and stop_gained clair3 variants (sample_id_clair3.snpeff.high_impact.vcf). 
 * **9_mlst:** MLST typing output file (sample_id_mlst.csv)
 * **10_report:** Summary of results for all samples
+    * Flye assembly statistics: assembly coverage, number of contigs, assembly size (3_flye_stats.tsv)  
+    * QUAST combined report file (4_quast_report.tsv)  
     * Checkm results (5_checkm_lineage_wf_results.tsv)  
     * Centrifuge taxonomy results (6_centrifuge_pasteurella_multocida_species_abundance.tsv)  
     * Kaptive results (7_kaptive_results.tsv)  
