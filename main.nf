@@ -402,7 +402,7 @@ process clair3 {
 	locus=`tail -1 !{kaptive_report} | cut -f3`
 	ref_gb=`grep ${locus:0:2} !{params.reference_LPS} | cut -f2`
 	ref_fasta=`grep ${locus:0:2} !{params.reference_LPS} | cut -f3`
-	run_clair3.sh --bam_fn=!{bam} --ref_fn=${ref_fasta} --threads=!{params.clair3_threads} --platform="ont" --model_path=!{params.clair3_model} --sample_name=!{sample} --output=\$PWD --haploid_precise --no_phasing_for_fa --include_all_ctgs --enable_long_indel
+	run_clair3.sh --bam_fn=!{bam} --ref_fn=${ref_fasta} --threads=!{params.clair3_threads} --platform="ont" --model_path=!{params.clair3_model} --sample_name=!{sample} --output=\$PWD !{params.clair3_args}  --no_phasing_for_fa --include_all_ctgs --enable_long_indel
         gunzip -c merge_output.vcf.gz > merge_output.vcf
 	mv merge_output.vcf clair3.vcf
 	cp .command.log clair3.log
