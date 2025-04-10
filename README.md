@@ -229,6 +229,7 @@ Some parameters can be added to the command line in order to include or skip som
 * `--minimap_threads`: number of threads for the Minimap2 mapping step (default=6)
 * `--clair3_threads`: number of threads for the Clair3 variant calling step (default=4)
 * `--clair3_model`: path to the clair3 model folder (default="../../../databases/clair3_models/r1041_e82_400bps_sup_v500")
+* `--clair3_args`: Clair3 optional parameters (default="--haploid_sensitive"), see [available parameters](https://github.com/HKU-BAL/Clair3?tab=readme-ov-file#options)
 * `--skip_snpeff`: skip the variant annotation step (default=false)
 * `--reference_LPS`: path to the file summarising the reference LPS sequence files (default="../../../databases/reference_LPS.txt")
 
