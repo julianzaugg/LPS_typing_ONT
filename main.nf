@@ -587,6 +587,15 @@ workflow {
 				kaptive3(flye.out.assembly_only)
 			}
 			summary_kaptive(kaptive3.out.kaptive_tsv.collect())
+			if (!params.skip_clair3) {
+				minimap(ch_samplesheet_ONT.join(kaptive3.out.kaptive_results))
+				clair3(minimap.out.minimap_results)
+				if (!params.skip_snpeff) {
+					snpeff(clair3.out.clair3_results)
+					snpsift(snpeff.out.snpeff_results)
+					report(snpsift.out.snpsift_results.collect())
+				}
+			}
 		}	
 		if (!params.skip_mlst) {
 			if (!params.skip_polishing) {
@@ -595,15 +604,6 @@ workflow {
 				mlst(flye.out.assembly_only)
 			}
 			summary_mlst(mlst.out.mlst_results.collect())
-		}
-		if (!params.skip_clair3) {
-			minimap(ch_samplesheet_ONT.join(kaptive3.out.kaptive_results))
-			clair3(minimap.out.minimap_results)
-			if (!params.skip_snpeff) {
-				snpeff(clair3.out.clair3_results)
-				snpsift(snpeff.out.snpeff_results)
-				report(snpsift.out.snpsift_results.collect())
-			}
 		}
 	}
 }
