@@ -6,6 +6,8 @@ Bioinformatics pipeline for Pasteurella multocida LPS typing using ONT sequencin
   - [Example data](#Example-data)
   - [Optional parameters](#Optional-parameters)
   - [Output files](#structure-of-the-output-folders)
+  - [Assembly mode](#Running-the-workflow-in-assembly-mode-for-other-organisms)
+  - [Troubleshooting](#Troubleshooting)
   - [Acknowledgements/citations/credits](#acknowledgements--citations--credits)
     
 ## Overall pipeline 
@@ -274,7 +276,17 @@ Each sample folder will contain the following folders:
     * Genotype results summarising the variants found in the genotype database (10_genotype_report.tsv)
 
 ## Running the workflow in assembly mode for other organisms
+
 The default parameters are suited for Pasteurella multocida. The LPS typing and variant calling are specific to Pasteurella multocida. Here are the paraneters to use the workflow to assemble another species:  
 * `--genome_size`: estimated genome size (default="2.3M")
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
-* `--skip_kaptive3`: skip the Kaptive typing step (default=false). note: it will automatically skip the variant calling step. 
+* `--skip_kaptive3`: skip the Kaptive typing step (default=false). note: it will automatically skip the variant calling step.
+
+ ## Troubleshooting
+
+Here are a list of things to check if an error occurs:  
+
+* read the error message in the log file
+* the samplesheet contains the correct header line (cf https://github.com/vmurigneu/LPS_typing?tab=readme-ov-file#step-by-step-user-guide)
+* the fastq files in my samplesheet are present in the fastq folder given in the nextflow.sh script (--fqdir).
+* the /databases folder is present in the cloned pipeline repository and not empty (cf https://github.com/vmurigneu/LPS_typing?tab=readme-ov-file#step-by-step-user-guide)
