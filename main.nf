@@ -307,10 +307,12 @@ process summary_centrifuge {
 	input:
 		path(centrifuge_files)
 	output:
-		path("6_centrifuge_pasteurella_multocida_species_abundance.tsv"), emit: centrifuge_summary
+		tuple path("6_centrifuge_most_abundant_species.tsv"), path("6_centrifuge_pasteurella_multocida_species_abundance.tsv"), emit: centrifuge_summary
 	script:
 	"""
 	echo -e sampleID\\\tname\\\ttaxID\\\ttaxRank\\\tgenomeSize\\\tnumReads\\\tnumUniqueReads\\\tabundance > header_centrifuge
+	for file in `ls *_centrifuge_report.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_centrifuge_report.tsv}; grep -v abund \$file | sort -t\$'\t' -k7gr | head -1 | sed s/^/\${sample}\\\t/  >> 6_centrifuge_most_abundant_species.tsv.tmp; done
+	cat header_centrifuge 6_centrifuge_most_abundant_species.tsv.tmp > 6_centrifuge_most_abundant_species.tsv
 	for file in `ls *_centrifuge_report.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_centrifuge_report.tsv}; grep multocida \$file | grep "species"| grep -v subspecies | sed s/^/\${sample}\\\t/  >> 6_centrifuge_pasteurella_multocida_species_abundance.tsv.tmp; done
 	cat header_centrifuge 6_centrifuge_pasteurella_multocida_species_abundance.tsv.tmp > 6_centrifuge_pasteurella_multocida_species_abundance.tsv
 	"""
@@ -321,7 +323,7 @@ process kaptive3 {
         tag "${sample}"
         label "cpu"
         publishDir "$params.outdir/$sample/7_kaptive_v3",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
-        publishDir "$params.outdir/$sample/7_kaptive_v3",  mode: 'copy', pattern: '*fna', saveAs: { filename -> "${sample}_$filename" }
+        publishDir "$params.outdir/$sample/7_kaptive_v3",  mode: 'copy', pattern: '*fna'
         publishDir "$params.outdir/$sample/7_kaptive_v3",  mode: 'copy', pattern: '*tsv'
 	input:
                 tuple val(sample), path(assembly)
@@ -336,6 +338,8 @@ process kaptive3 {
         """
         kaptive assembly ${params.kaptive_db_9lps} ${assembly} -f \$PWD -o kaptive_results.tsv
         mv kaptive_results.tsv ${sample}_kaptive_results.tsv
+	sed s/flye_polished/${sample}/ flye_polished_kaptive_results.fna > ${sample}_flye_polished_kaptive_results.fna
+	rm flye_polished_kaptive_results.fna
 	cp .command.log kaptive_v3.log
         """
 }
