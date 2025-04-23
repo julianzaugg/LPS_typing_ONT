@@ -269,11 +269,13 @@ Each sample folder will contain the following folders:
     * Flye assembly statistics: assembly coverage, number of contigs, assembly size (3_flye_stats.tsv)  
     * QUAST combined report file (4_quast_report.tsv)  
     * Checkm results (5_checkm_lineage_wf_results.tsv)  
-    * Centrifuge taxonomy results:
+    * Centrifuge taxonomy results:  
         - Abundance of P. multocida reads: 6_centrifuge_pasteurella_multocida_species_abundance.tsv
         - Information about the most abundant species identified: 6_centrifuge_most_abundant_species.tsv  
     * Kaptive results (7_kaptive_results.tsv)  
-    * Clair3 variants results (8_clair3_snpeff_high_impact.vcf)  
+    * Clair3 variants results:
+        - all variants: 8_clair3_snpeff.vcf  
+        - only variants predicted to have a high impact on the protein: 8_clair3_snpeff_high_impact.vcf  
     * MLST results (9_mlst.csv)  
     * Genotype results summarising the variants found in the genotype database (10_genotype_report.tsv)
 
