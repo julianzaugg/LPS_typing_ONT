@@ -277,7 +277,9 @@ Each sample folder will contain the following folders:
         - all variants: 8_clair3_snpeff.vcf  
         - only variants predicted to have a high impact on the protein: 8_clair3_snpeff_high_impact.vcf  
     * MLST results (9_mlst.csv)  
-    * Genotype results summarising the variants found in the genotype database (10_genotype_report.tsv)
+    * Genotype results summarising the variants found in the genotype database (10_genotype_report.tsv). To be reported, the variant identified by clair3 must be present in the genotype database with the following conditions:
+       - the variant must be identified at the same position in the reference sequence and
+       - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.  
 
 ## Running the workflow in assembly mode for other organisms
 
