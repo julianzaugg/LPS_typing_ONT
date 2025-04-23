@@ -417,12 +417,12 @@ process snpeff {
 	cpus "${params.threads}"
 	tag "${sample}"
 	label "cpu"
-	publishDir "$params.outdir/$sample/8_clair3",  mode: 'copy', pattern: '*vcf', saveAs: { filename -> "${sample}_$filename"}
+	publishDir "$params.outdir/$sample/8_clair3",  mode: 'copy', pattern: '*vcf'
 	publishDir "$params.outdir/$sample/8_clair3",  mode: 'copy', pattern: '*log', saveAs: { filename -> "${sample}_$filename" }
 	input:
 		tuple val(sample), path(bam), path(bai), path(vcf), path(kaptive_report)
 	output:
-		tuple val(sample), path ("clair3.snpeff.vcf"), emit: snpeff_results
+		tuple val(sample), path ("*clair3.snpeff.vcf"), emit: snpeff_results
 		path("snpeff.log")
 	when:
 	!params.skip_snpeff
@@ -440,6 +440,7 @@ process snpeff {
 	echo 'LPS_snpeffdb.genome : LPS_snpeffdb' >> snpEff.config
 	echo 'LPS_snpeffdb.codonTable : Bacterial_and_Plant_Plastid' >> snpEff.config
 	snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb !{vcf} > clair3.snpeff.vcf
+	mv clair3.snpeff.vcf !{sample}_clair3.snpeff.vcf
 	cp .command.log snpeff.log
 	'''
 }
@@ -453,7 +454,7 @@ process snpsift {
         input:
                 tuple val(sample), path(vcf)
         output:
-                path ("*clair3.snpeff.high_impact.vcf"), emit: snpsift_results
+                tuple path(vcf), path ("*clair3.snpeff.high_impact.vcf"), emit: snpsift_results
                 path("snpsift.log")
         when:
         !params.skip_snpeff
@@ -471,22 +472,24 @@ process report {
 	input:
 		path(clair3_files)
 	output:
-		tuple path("8_clair3_snpeff_high_impact.vcf"), path("10_genotype_report.tsv"), emit: genotype_report
+		tuple path("8_clair3_snpeff.vcf"), path("8_clair3_snpeff_high_impact.vcf"), path("10_genotype_report.tsv"), emit: genotype_report
 	script:
 	"""
 	echo -e  SAMPLEID\\\tCHROM\\\tPOS\\\tID\\\tREF\\\tALT\\\tQUAL\\\tFILTER\\\tINFO\\\tFORMAT\\\tSAMPLE > header_clair3
 	for file in `ls *_clair3.snpeff.high_impact.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.high_impact.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff_high_impact.vcf.tmp; done
 	cat header_clair3 8_clair3_snpeff_high_impact.vcf.tmp > 8_clair3_snpeff_high_impact.vcf
+	for file in `ls *_clair3.snpeff.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff.vcf.tmp; done
+	cat header_clair3 8_clair3_snpeff.vcf.tmp > 8_clair3_snpeff.vcf
 	touch 10_genotype_report.tsv
 	while IFS=\$'\t' read sample chrom pos id ref alt qual filter info format formatsample; do
 		while IFS=\$'\t' read db_LPStype db_genotype db_isolate db_chrom db_pos db_type db_ref db_alt db_gene; do 
-			if [[ \$chrom == \$db_chrom && \$pos == \$db_pos ]]; then
+			if [[ \$chrom == \$db_chrom && \$pos == \$db_pos && \$ref == \$db_ref && \$alt == \$db_alt ]]; then
 				if [[ \$sample != "SAMPLEID" ]]; then
 					echo "sample" \$sample": found genotype" \$db_genotype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_genotype_report.tsv
 				fi
 			fi
 		done < ${params.genotype_db}
-	done < 8_clair3_snpeff_high_impact.vcf
+	done < 8_clair3_snpeff.vcf
 	"""
 }
 
