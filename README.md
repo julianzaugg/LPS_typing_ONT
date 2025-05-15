@@ -52,6 +52,14 @@ The LPS type of the sample is obtained using the software [Kaptive](https://kapt
 
 The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome assemblies against the  PubMLST typing scheme "pmultocida_2" by default (RIRDC). The typing scheme can be modified by specifying the parameter --mlst_scheme (e.g. --mlst_scheme "pmultocida").   
 
+### 11. 	Genome annotation using Bakta
+
+The software [Bakta](https://github.com/oschwengers/bakta) is used to annotate the genome assemblies. The default database is v6.0 from 2025-02-24, https://zenodo.org/records/14916843.    
+
+### 12. 	Antimicrobial Resistance genes
+
+The software [AMRFinderPlus](https://github.com/ncbi/amr) is used to identify AMR genes in the genome assemblies. The default database is the version 2025-03-25.1 that was downloaded using the command amrfinder_update.    
+
 ## Step by step user guide
 
 Some files required to use the pipeline are provided to the user (see sections 1a, 1b and 2 below). Additional files must be created/modified by the user (see sections 1c, 3 and 4 below). 
@@ -83,7 +91,7 @@ The main.nf script contains the pipeline code and is generally not user-modifiab
 
 This is the bash script used to launch the workflow on the HPC. The template slurm script provided can be used to launch the pipeline on UQ HPC Bunya and is available [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh). This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). 
 
-**2) Database files for Centrifuge, Kaptive, Minimap2 and CheckM**
+**2) Database files for Centrifuge, Kaptive, Minimap2, CheckM, Bakta, and AMRFinderPlus**
 
 Copy the databases folder from the RDM to the cloned pipeline repository on the scratch space (named "dir" below):
 ```
@@ -239,6 +247,18 @@ Some parameters can be added to the command line in order to include or skip som
 * `--skip_mlst`: skip the MLST typing step (default=false)
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
 
+11. Genome annotation using Bakta:
+* `--skip_bakta`: skip the genome annotation step (default=false)
+* `--bakta_threads`: number of threads for the Bakta step (default=8)  
+* `--bakta_db`: path to the Bakta database files (default="../../../databases/bakta/db")
+* `--bakta_protein_ref`: path to the trusted protein sequences file for CDS annotation in fasta or GenBank format (CDS features) (default="../../../databases/LPS/NC_002663_LPS.gb")  
+* `--bakta_args`: Bakta optional parameters (default="")  
+
+12. AMR genes identification using AMRFinderPlus:
+* `--skip_amrfinder`: skip the AMR genes identification step (default=false)
+* `--amrfinder_db`: path to the AMRFinderPlus database files (default="../../../databases/amrfinderplus/2025-03-25.1")
+* `--amrfinder_args`: AMRFinderPlus optional parameters (default="")
+
 ## Structure of the output folders
 
 The pipeline will create several folders corresponding to the different steps of the pipeline. 
@@ -279,7 +299,13 @@ Each sample folder will contain the following folders:
     * MLST results (9_mlst.csv)  
     * Genotype results summarising the variants found in the genotype database (10_genotype_report.tsv). To be reported, the variant identified by clair3 must be present in the genotype database with the following conditions:
        - the variant must be identified at the same position in the reference sequence and
-       - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.  
+       - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.
+* **11_bakta:** Bakta genome annotation output files. The output files are described [here](https://github.com/oschwengers/bakta?tab=readme-ov-file#output).
+    * Annotations & sequences in (multi) GenBank format (sample_id_bakta.gbff)  
+    * Inference metrics (score, evalue, coverage, identity) for annotated accessions as TSV (sample_id_bakta.inference.tsv)  
+    * Annotation summary in text format (sample_id_bakta.txt)    
+* **12_amrfinder:** AMRFinderPlus output file (sample_id_amrfinder.tsv). The output in tab-delimited format is described [here](https://github.com/ncbi/amr/wiki/Running-AMRFinderPlus#output-format).  
+  
 
 ## Running the workflow in assembly mode for other organisms
 
