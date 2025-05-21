@@ -29,7 +29,7 @@ def helpMessage() {
 		--fqdir					Path to the directory containing the fastq files
 		--pod5_dir				Path to the directory containing the pod5 files
 		--outdir				Path to the output directory to be created
-		--slurm_account				Name of the Bunya account (default='a_qcif_support')
+		--slurm_account				Name of the Bunya account (default='a_uqds')
 
     """.stripIndent()
 }
@@ -526,6 +526,61 @@ process summary_mlst {
 	"""
 }
 
+process bakta {
+	cpus "${params.bakta_threads}"
+	tag "${sample}"
+	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
+	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*gbff'
+	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*tsv'
+	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*tsv'
+	input:
+		tuple val(sample), path(assembly)
+	output:
+		tuple path("*.gbff"), path("*.tsv"), path("*.txt"), emit: bakta_results
+		path("bakta.log")
+	when:
+	!params.skip_bakta
+	script:
+	"""
+	bakta --db ${params.bakta_db} --threads ${params.bakta_threads} --prefix ${sample}_bakta --proteins ${params.bakta_protein_ref} --output \$PWD/ ${params.bakta_args} ${assembly} 
+	cp .command.log bakta.log
+	"""
+}
+
+process amrfinder {
+	tag "${sample}"
+	publishDir "$params.outdir/$sample/12_amrfinder",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
+	publishDir "$params.outdir/$sample/12_amrfinder",  mode: 'copy', pattern: '*tsv'
+	input:
+		tuple val(sample), path(assembly)
+	output:
+		path("*.tsv"), emit: amrfinder_results
+		path("amrfinder.log")
+	when:
+	!params.skip_amrfinder
+	script:
+	"""
+	amrfinder -n ${assembly} -d ${params.amrfinder_db} -o \$PWD/${sample}_amrfinder.tsv --name ${sample} --threads ${params.threads} --plus ${params.amrfinder_args}
+	cp .command.log amrfinder.log
+	"""
+} 	
+
+process summary_amrfinder {
+	publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*tsv'
+	input:
+		path(amrfinder_files)
+	output:
+		path("12_amrfinder.tsv"), emit: amrfinder_summary
+	script:
+	"""
+	echo -e Name\\\tProtein id\\\tContig id\\\tStart\\\tStop\\\tStrand\\\tElement symbol\\\tElement name\\\tScope\\\tType\\\tSubtype\\\tClass\\\tSubclass\\\tMethod\\\tTarget length\\\tReference sequence length\\\t% Coverage of reference\\\t% Identity to reference\\\tAlignment length\\\tClosest reference accession\\\tClosest reference name\\\tHMM accession\\\tHMM description > header_amrfinder
+	for file in ${amrfinder_files}; do 
+		tail -n +2 "\$file" >> 12_amrfinder.tsv.tmp
+	done
+	cat header_amrfinder 12_amrfinder.tsv.tmp > 12_amrfinder.tsv
+	"""
+}
+
 workflow {
 	if (!params.skip_basecalling) {
 		pod5 = Channel.fromPath("${params.pod5_dir}", checkIfExists: true )
@@ -611,6 +666,21 @@ workflow {
 				mlst(flye.out.assembly_only)
 			}
 			summary_mlst(mlst.out.mlst_results.collect())
+		}
+		if (!params.skip_bakta) {
+			if (!params.skip_polishing) {
+				bakta(medaka.out.polished_medaka)
+			} else if (params.skip_polishing) {
+				bakta(flye.out.assembly_only)
+			}
+		}
+		if (!params.skip_amrfinder) {
+			if (!params.skip_polishing) {
+				amrfinder(medaka.out.polished_medaka)
+			} else if (params.skip_polishing) {
+				amrfinder(flye.out.assembly_only)
+			}
+			summary_amrfinder(amrfinder.out.amrfinder_results.collect())
 		}
 	}
 }
