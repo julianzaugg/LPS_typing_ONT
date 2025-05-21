@@ -70,10 +70,10 @@ Navigate to a folder to your scratch space where you would like to run the pipel
 ```
 raw_dir=/scratch/project_mnt/SXXX/PIPELINE
 cd $raw_dir
-git clone https://github.com/vmurigneu/LPS_typing.git
+git clone https://github.com/vmurigneu/LPS_typing_ONT.git
 ```
 
-It will create a repository called "LPS_typing". The following three files can be found in the pipeline repository:
+It will create a repository called "LPS_typing_ONT". The following three files can be found in the pipeline repository:
 
 - **a) Nextflow configuration file (nextflow.config)**  
 
@@ -81,7 +81,7 @@ When a Nexflow pipeline script is launched, Nextflow looks for a file named **ne
 
 The pipeline uses separated Singularity containers for all processes. Nextflow will automatically pull the singularity images required to run the pipeline and cache those images in the singularity directory in the pipeline work directory by default or in the singularity.cacheDir specified in the nextflow.config file ([see documentation](https://www.nextflow.io/docs/latest/singularity.html)). Ensure that you have sufficient space in your assigned singularity directory as images can be large.   
 
-An example configuration file can be found [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.config). 
+An example configuration file can be found [here](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/nextflow.config). 
 
 - **b) Nextflow main script (main.nf)**
 
@@ -89,13 +89,13 @@ The main.nf script contains the pipeline code and is generally not user-modifiab
 
 - **c) Nextflow execution bash script (nextflow.sh)**
 
-This is the bash script used to launch the workflow on the HPC. The template slurm script provided can be used to launch the pipeline on UQ HPC Bunya and is available [here](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh). This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). 
+This is the bash script used to launch the workflow on the HPC. The template slurm script provided can be used to launch the pipeline on UQ HPC Bunya and is available [here](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/nextflow.sh). This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). 
 
 **2) Database files for Centrifuge, Kaptive, Minimap2, CheckM, Bakta, and AMRFinderPlus**
 
 Copy the databases folder from the RDM to the cloned pipeline repository on the scratch space (named "dir" below):
 ```
-dir=/scratch/project_mnt/SXXX/PIPELINE/LPS_typing
+dir=/scratch/project_mnt/SXXX/PIPELINE/LPS_typing_ONT
 cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
 ```
 
@@ -103,8 +103,8 @@ cp -r /QRISdata/Q2313/Valentine/PIPELINES/databases ${dir}
 
 The samplesheet file is a comma-separated values files that defines the names of the samples with their corresponding barcode and input fastq files. The header line should match the header line in the examples below. The samplesheet can be saved in a folder named samplesheet e.g. 
 ```
-mkdir /scratch/project_mnt/SXXX/LPS_typing/samplesheet
-vim /scratch/project_mnt/SXXX/LPS_typing/samplesheet/samples.csv
+mkdir /scratch/project_mnt/SXXX/LPS_typing_ONT/samplesheet
+vim /scratch/project_mnt/SXXX/LPS_typing_ONT/samplesheet/samples.csv
 ```
 
 * **Basecalling and typing workflow** (soon)
@@ -134,7 +134,7 @@ The pipeline will be launched on the HPC Bunya using the bash script nextflow.sh
 
 The raw ONT pod5 files must be copied in a directory (parameter "--pod5_dir").
 ```
-pod5=/scratch/project_mnt/SXXX/LPS_typing_pipeline/pod5
+pod5=/scratch/project_mnt/SXXX/LPS_typing_ONT_pipeline/pod5
 mkdir $pod5
 cp /path/to/pod5/files/ $pod5
 ```
@@ -157,7 +157,7 @@ sbatch nextflow.sh
   
 The user must copy the basecalled files in a directory (parameter "--fqdir") and specify the path to those files in the samplesheet file (see above). 
 ```
-fastq=/scratch/project_mnt/SXXX/LPS_typing_pipeline/fastq
+fastq=/scratch/project_mnt/SXXX/LPS_typing_ONT_pipeline/fastq
 mkdir $fastq
 cp /path/to/fastq/files $fastq
 ```
@@ -185,10 +185,10 @@ To test the pipeline, we have provided some test data that contain a subset of 2
 
 File | Description
 ---|---
-[fastq/barcode17.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing/blob/main/fastq/barcode17.simplex_duplex.test.fastq.gz) | ONT fastq reads for barcode17
-[fastq/barcode18.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing/blob/main/fastq/barcode18.simplex_duplex.test.fastq.gz) | ONT fastq reads for barcode18
-[samplesheet/samples_test.csv](https://github.com/vmurigneu/LPS_typing/blob/main/samplesheet/samples_test.csv) | samplesheet for running the typing pipeline
-[nextflow.sh](https://github.com/vmurigneu/LPS_typing/blob/main/nextflow.sh) | Nextflow execution bash script
+[fastq/barcode17.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/fastq/barcode17.simplex_duplex.test.fastq.gz) | ONT fastq reads for barcode17
+[fastq/barcode18.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/fastq/barcode18.simplex_duplex.test.fastq.gz) | ONT fastq reads for barcode18
+[samplesheet/samples_test.csv](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/samplesheet/samples_test.csv) | samplesheet for running the typing pipeline
+[nextflow.sh](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/nextflow.sh) | Nextflow execution bash script
 
 In the nextflow.sh file, you must modify the directory "dir" line 16, the Bunya Slurm account name for your group line 7 and line 26. Then you can run the pipeline using:
 `sbatch nextflow.sh`
@@ -319,6 +319,6 @@ The default parameters are suited for Pasteurella multocida. The LPS typing and 
 Here are a list of things to check if an error occurs:  
 
 * read the error message in the log file
-* the samplesheet contains the correct header line (cf https://github.com/vmurigneu/LPS_typing?tab=readme-ov-file#step-by-step-user-guide)
+* the samplesheet contains the correct header line (cf https://github.com/vmurigneu/LPS_typing_ONT?tab=readme-ov-file#step-by-step-user-guide)
 * the fastq files in my samplesheet are present in the fastq folder given in the nextflow.sh script (--fqdir).
-* the /databases folder is present in the cloned pipeline repository and not empty (cf https://github.com/vmurigneu/LPS_typing?tab=readme-ov-file#step-by-step-user-guide)
+* the /databases folder is present in the cloned pipeline repository and not empty (cf https://github.com/vmurigneu/LPS_typing_ONT?tab=readme-ov-file#step-by-step-user-guide)
