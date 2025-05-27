@@ -191,11 +191,11 @@ process summary_quast {
 	input:
 		path(quast_files)
 	output:
-		path("4_quast_report.tsv"), emit: quast_summary
+		path("4_ONT_quast_report.tsv"), emit: quast_summary
 	script:
 	"""
 	for file in `ls *report.tsv`; do cut -f2 \$file > \$file.tmp.txt; cut -f1 \$file > rownames.txt; done
-	paste rownames.txt *tmp.txt > 4_quast_report.tsv
+	paste rownames.txt *tmp.txt > 4_ONT_quast_report.tsv
 	"""
 }
 
@@ -204,10 +204,10 @@ process summary_flye {
 	input:
 		path(flye_info_files)
 	output:
-		path("3_flye_stats.tsv"), emit: flye_summary
+		path("3_ONT_flye_stats.tsv"), emit: flye_summary
 	script:
 	"""
-	echo -e "sample\tasssembly_coverage\tnb_contigs\tassembly_size" > 3_flye_stats.tsv
+	echo -e "sample\tasssembly_coverage\tnb_contigs\tassembly_size" > 3_ONT_flye_stats.tsv
 	for file in `ls *info.txt`; do
 		fileName=\$(basename \$file)
 		sample=\${fileName%%_assembly_info.txt}
@@ -216,7 +216,7 @@ process summary_flye {
 		total_cov=`awk '{total_cov+=\$2*\$3} END {print total_cov}' tmp`
 		mean_cov=\$((\$total_cov/\$total_length))
 		nb_contigs=`grep contig \$file | wc -l`
-		echo -e \$sample\\\t\$mean_cov\\\t\$nb_contigs\\\t\$total_length  >> 3_flye_stats.tsv
+		echo -e \$sample\\\t\$mean_cov\\\t\$nb_contigs\\\t\$total_length  >> 3_ONT_flye_stats.tsv
 	done
 	"""
 }
@@ -250,12 +250,12 @@ process summary_checkm {
 	input:
 		path(checkm_files)
 	output:
-		path("5_checkm_lineage_wf_results.tsv"), emit: checkm_summary
+		path("5_ONT_checkm_lineage_wf_results.tsv"), emit: checkm_summary
 	script:
 	"""
 	echo -e  sampleID\\\tMarker_lineage\\\tNbGenomes\\\tNbMarkers\\\tNbMarkerSets\\\t0\\\t1\\\t2\\\t3\\\t4\\\t5+\\\tCompleteness\\\tContamination\\\tStrain_heterogeneity > header_checkm
 	for file in `ls *checkm_lineage_wf_results.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_checkm_lineage_wf_results.tsv}; grep -v Bin \$file | sed s/^flye_polished/\${sample}/ >> 5_checkm_lineage_wf_results.tsv.tmp; done
-	cat header_checkm 5_checkm_lineage_wf_results.tsv.tmp > 5_checkm_lineage_wf_results.tsv
+	cat header_checkm 5_checkm_lineage_wf_results.tsv.tmp > 5_ONT_checkm_lineage_wf_results.tsv
 	"""
 }
 
@@ -307,14 +307,14 @@ process summary_centrifuge {
 	input:
 		path(centrifuge_files)
 	output:
-		tuple path("6_centrifuge_most_abundant_species.tsv"), path("6_centrifuge_pasteurella_multocida_species_abundance.tsv"), emit: centrifuge_summary
+		tuple path("6_ONT_centrifuge_most_abundant_species.tsv"), path("6_ONT_centrifuge_pasteurella_multocida_species_abundance.tsv"), emit: centrifuge_summary
 	script:
 	"""
 	echo -e sampleID\\\tname\\\ttaxID\\\ttaxRank\\\tgenomeSize\\\tnumReads\\\tnumUniqueReads\\\tabundance > header_centrifuge
 	for file in `ls *_centrifuge_report.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_centrifuge_report.tsv}; grep -v abund \$file | sort -t\$'\t' -k7gr | head -1 | sed s/^/\${sample}\\\t/  >> 6_centrifuge_most_abundant_species.tsv.tmp; done
-	cat header_centrifuge 6_centrifuge_most_abundant_species.tsv.tmp > 6_centrifuge_most_abundant_species.tsv
+	cat header_centrifuge 6_centrifuge_most_abundant_species.tsv.tmp > 6_ONT_centrifuge_most_abundant_species.tsv
 	for file in `ls *_centrifuge_report.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_centrifuge_report.tsv}; grep multocida \$file | grep "species"| grep -v subspecies | sed s/^/\${sample}\\\t/  >> 6_centrifuge_pasteurella_multocida_species_abundance.tsv.tmp; done
-	cat header_centrifuge 6_centrifuge_pasteurella_multocida_species_abundance.tsv.tmp > 6_centrifuge_pasteurella_multocida_species_abundance.tsv
+	cat header_centrifuge 6_centrifuge_pasteurella_multocida_species_abundance.tsv.tmp > 6_ONT_centrifuge_pasteurella_multocida_species_abundance.tsv
 	"""
 }
 
@@ -349,12 +349,12 @@ process summary_kaptive {
 	input:
 		path(kaptive_files)
 	output:
-		path("7_kaptive_results.tsv"), emit: kaptive_summary
+		path("7_ONT_kaptive_results.tsv"), emit: kaptive_summary
 	script:
 	"""
 	echo -e sampleID\\\tBest match locus\\\tBest match type\\\tMatch confidence\\\tProblems\\\tIdentity\\\tCoverage\\\tLength discrepancy\\\tExpected genes in locus\\\tExpected genes in locus, details\\\tMissing expected genes\\\tOther genes in locus\\\tOther genes in locus, details\\\tExpected genes outside locus\\\tExpected genes outside locus, details\\\tOther genes outside locus\\\tOther genes outside locus, details\\\tTruncated genes, details\\\tExtra genes, details >  header_kaptive3
 	for file in `ls *_kaptive_results.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_kaptive_results.tsv}; grep -v Assembly \$file | sed s/^flye_polished/\${sample}/  >> 7_kaptive_results.tsv.tmp; done
-	cat header_kaptive3 7_kaptive_results.tsv.tmp > 7_kaptive_results.tsv
+	cat header_kaptive3 7_kaptive_results.tsv.tmp > 7_ONT_kaptive_results.tsv
 	"""
 }
 
@@ -472,24 +472,24 @@ process report {
 	input:
 		path(clair3_files)
 	output:
-		tuple path("8_clair3_snpeff.vcf"), path("8_clair3_snpeff_high_impact.vcf"), path("10_genotype_report.tsv"), emit: genotype_report
+		tuple path("8_ONT_clair3_snpeff.vcf"), path("8_ONT_clair3_snpeff_high_impact.vcf"), path("10_ONT_genotype_report.tsv"), emit: genotype_report
 	script:
 	"""
 	echo -e  SAMPLEID\\\tCHROM\\\tPOS\\\tID\\\tREF\\\tALT\\\tQUAL\\\tFILTER\\\tINFO\\\tFORMAT\\\tSAMPLE > header_clair3
 	for file in `ls *_clair3.snpeff.high_impact.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.high_impact.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff_high_impact.vcf.tmp; done
-	cat header_clair3 8_clair3_snpeff_high_impact.vcf.tmp > 8_clair3_snpeff_high_impact.vcf
+	cat header_clair3 8_clair3_snpeff_high_impact.vcf.tmp > 8_ONT_clair3_snpeff_high_impact.vcf
 	for file in `ls *_clair3.snpeff.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff.vcf.tmp; done
-	cat header_clair3 8_clair3_snpeff.vcf.tmp > 8_clair3_snpeff.vcf
+	cat header_clair3 8_clair3_snpeff.vcf.tmp > 8_ONT_clair3_snpeff.vcf
 	touch 10_genotype_report.tsv
 	while IFS=\$'\t' read sample chrom pos id ref alt qual filter info format formatsample; do
 		while IFS=\$'\t' read db_LPStype db_genotype db_isolate db_chrom db_pos db_type db_ref db_alt db_gene; do 
 			if [[ \$chrom == \$db_chrom && \$pos == \$db_pos && \$ref == \$db_ref && \$alt == \$db_alt ]]; then
 				if [[ \$sample != "SAMPLEID" ]]; then
-					echo "sample" \$sample": found genotype" \$db_genotype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_genotype_report.tsv
+					echo "sample" \$sample": found genotype" \$db_genotype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_ONT_genotype_report.tsv
 				fi
 			fi
 		done < ${params.genotype_db}
-	done < 8_clair3_snpeff.vcf
+	done < 8_ONT_clair3_snpeff.vcf
 	"""
 }
 
@@ -519,10 +519,10 @@ process summary_mlst {
 	input:
 		path(mlst_files)
 	output:
-		path("9_mlst.csv"), emit: mlst_summary
+		path("9_ONT_mlst.csv"), emit: mlst_summary
 	script:
 	"""
-	for file in `ls *_mlst.csv`; do fileName=\$(basename \$file); sample=\${fileName%%_mlst.csv};  sed s/^/\${sample}_/ \$file >> 9_mlst.csv; done
+	for file in `ls *_mlst.csv`; do fileName=\$(basename \$file); sample=\${fileName%%_mlst.csv};  sed s/^/\${sample}_/ \$file >> 9_ONT_mlst.csv; done
 	"""
 }
 
@@ -570,14 +570,14 @@ process summary_amrfinder {
 	input:
 		path(amrfinder_files)
 	output:
-		path("12_amrfinder.tsv"), emit: amrfinder_summary
+		path("12_ONT_amrfinder.tsv"), emit: amrfinder_summary
 	script:
 	"""
 	echo -e Name\\\tProtein id\\\tContig id\\\tStart\\\tStop\\\tStrand\\\tElement symbol\\\tElement name\\\tScope\\\tType\\\tSubtype\\\tClass\\\tSubclass\\\tMethod\\\tTarget length\\\tReference sequence length\\\t% Coverage of reference\\\t% Identity to reference\\\tAlignment length\\\tClosest reference accession\\\tClosest reference name\\\tHMM accession\\\tHMM description > header_amrfinder
 	for file in ${amrfinder_files}; do 
 		tail -n +2 "\$file" >> 12_amrfinder.tsv.tmp
 	done
-	cat header_amrfinder 12_amrfinder.tsv.tmp > 12_amrfinder.tsv
+	cat header_amrfinder 12_amrfinder.tsv.tmp > 12_ONT_amrfinder.tsv
 	"""
 }
 
