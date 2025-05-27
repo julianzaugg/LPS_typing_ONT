@@ -286,20 +286,21 @@ Each sample folder will contain the following folders:
     * Frameshift and stop_gained clair3 variants (sample_id_clair3.snpeff.high_impact.vcf). 
 * **9_mlst:** MLST typing output file (sample_id_mlst.csv)
 * **10_report:** Summary of results for all samples
-    * Flye assembly statistics: assembly coverage, number of contigs, assembly size (3_flye_stats.tsv)  
-    * QUAST combined report file (4_quast_report.tsv)  
-    * Checkm results (5_checkm_lineage_wf_results.tsv)  
+    * Flye assembly statistics: assembly coverage, number of contigs, assembly size (3_ONT_flye_stats.tsv)  
+    * QUAST combined report file (4_ONT_quast_report.tsv)  
+    * Checkm results (5_ONT_checkm_lineage_wf_results.tsv)  
     * Centrifuge taxonomy results:  
-        - Abundance of P. multocida reads: 6_centrifuge_pasteurella_multocida_species_abundance.tsv
-        - Information about the most abundant species identified: 6_centrifuge_most_abundant_species.tsv  
-    * Kaptive results (7_kaptive_results.tsv)  
+        - Abundance of P. multocida reads: 6_ONT_centrifuge_pasteurella_multocida_species_abundance.tsv
+        - Information about the most abundant species identified: 6_ONT_centrifuge_most_abundant_species.tsv  
+    * Kaptive results (7_ONT_kaptive_results.tsv)  
     * Clair3 variants results:
-        - all variants: 8_clair3_snpeff.vcf  
-        - only variants predicted to have a high impact on the protein: 8_clair3_snpeff_high_impact.vcf  
-    * MLST results (9_mlst.csv)  
-    * Genotype results summarising the variants found in the genotype database (10_genotype_report.tsv). To be reported, the variant identified by clair3 must be present in the genotype database with the following conditions:
+        - all variants: 8_ONT_clair3_snpeff.vcf  
+        - only variants predicted to have a high impact on the protein: 8_ONT_clair3_snpeff_high_impact.vcf  
+    * MLST results (9_ONT_mlst.csv)  
+    * Genotype results summarising the variants found in the genotype database (10_ONT_genotype_report.tsv). To be reported, the variant identified by clair3 must be present in the genotype database with the following conditions:
        - the variant must be identified at the same position in the reference sequence and
        - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.
+    * AMRFinderPlus results (12_ONT_amrfinder.tsv) 
 * **11_bakta:** Bakta genome annotation output files. The output files are described [here](https://github.com/oschwengers/bakta?tab=readme-ov-file#output).
     * Annotations & sequences in (multi) GenBank format (sample_id_bakta.gbff)  
     * Inference metrics (score, evalue, coverage, identity) for annotated accessions as TSV (sample_id_bakta.inference.tsv)  
