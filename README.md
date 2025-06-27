@@ -52,6 +52,12 @@ The LPS type of the sample is obtained using the software [Kaptive](https://kapt
 
 The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome assemblies against the  PubMLST typing scheme "pmultocida_2" by default (RIRDC). The typing scheme can be modified by specifying the parameter --mlst_scheme (e.g. --mlst_scheme "pmultocida").   
 
+### 10.  Subtype report
+
+The pipeline generates a subtype report file (10_ONT_subtype_report.tsv)summarising the variants found in the subtype database. To be reported, the variant identified by clair3 must be present in the subtype database with the following conditions:  
+- the variant must be identified at the same position in the reference sequence and
+- both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.  
+
 ### 11. 	Genome annotation using Bakta
 
 The software [Bakta](https://github.com/oschwengers/bakta) is used to annotate the genome assemblies. The default database is v6.0 from 2025-02-24, https://zenodo.org/records/14916843.    
@@ -232,7 +238,7 @@ Some parameters can be added to the command line in order to include or skip som
 
 7. LPS typing using Kaptive:
 * `--skip_kaptive3`: skip the Kaptive typing step (default=false). note: it will automatically skip the variant calling step.  
-* `--kaptive_db_9lps`: path to the Kaptive database file (default="../../../databases/v1_kaptive3/9lps.gbk")
+* `--kaptive_db_9lps`: path to the Kaptive database file (default="../../../databases/kaptive3_LPS_db_v1/9lps.gbk")
 
 8. Variant calling using Clair3:
 * `--skip_clair3`: skip the variant calling step (default=false)
@@ -241,11 +247,14 @@ Some parameters can be added to the command line in order to include or skip som
 * `--clair3_model`: path to the clair3 model folder (default="../../../databases/clair3_models/r1041_e82_400bps_sup_v500")
 * `--clair3_args`: Clair3 optional parameters (default="--haploid_sensitive"), see [available parameters](https://github.com/HKU-BAL/Clair3?tab=readme-ov-file#options)
 * `--skip_snpeff`: skip the variant annotation step (default=false)
-* `--reference_LPS`: path to the file summarising the reference LPS sequence files (default="../../../databases/reference_LPS.txt")
+* `--reference_LPS`: path to the file summarising the reference LPS sequence files (default="../../../databases/LPS/reference_LPS.txt")
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
+
+10. Report:
+* `--subtype_db`: path to the subtype database file (default="../../../databases/LPS/LPS_subtype_database_v1.txt")
 
 11. Genome annotation using Bakta:
 * `--skip_bakta`: skip the genome annotation step (default=false)
@@ -297,7 +306,7 @@ Each sample folder will contain the following folders:
         - all variants: 8_ONT_clair3_snpeff.vcf  
         - only variants predicted to have a high impact on the protein: 8_ONT_clair3_snpeff_high_impact.vcf  
     * MLST results (9_ONT_mlst.csv)  
-    * Genotype results summarising the variants found in the genotype database (10_ONT_genotype_report.tsv). To be reported, the variant identified by clair3 must be present in the genotype database with the following conditions:
+    * Subtype results summarising the variants found in the subtype database (10_ONT_subtype_report.tsv). To be reported, the variant identified by clair3 must be present in the subtype database with the following conditions:
        - the variant must be identified at the same position in the reference sequence and
        - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.
     * AMRFinderPlus results (12_ONT_amrfinder.tsv) 
