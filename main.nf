@@ -192,6 +192,8 @@ process summary_quast {
 		path(quast_files)
 	output:
 		path("4_ONT_quast_report.tsv"), emit: quast_summary
+	when:
+	!params.skip_quast
 	script:
 	"""
 	for file in `ls *report.tsv`; do cut -f2 \$file > \$file.tmp.txt; cut -f1 \$file > rownames.txt; done
@@ -205,6 +207,8 @@ process summary_flye {
 		path(flye_info_files)
 	output:
 		path("3_ONT_flye_stats.tsv"), emit: flye_summary
+	when:
+	!params.skip_assembly
 	script:
 	"""
 	echo -e "sample\tasssembly_coverage\tnb_contigs\tassembly_size" > 3_ONT_flye_stats.tsv
@@ -251,6 +255,8 @@ process summary_checkm {
 		path(checkm_files)
 	output:
 		path("5_ONT_checkm_lineage_wf_results.tsv"), emit: checkm_summary
+	when:
+	!params.skip_checkm
 	script:
 	"""
 	echo -e  sampleID\\\tMarker_lineage\\\tNbGenomes\\\tNbMarkers\\\tNbMarkerSets\\\t0\\\t1\\\t2\\\t3\\\t4\\\t5+\\\tCompleteness\\\tContamination\\\tStrain_heterogeneity > header_checkm
@@ -308,6 +314,8 @@ process summary_centrifuge {
 		path(centrifuge_files)
 	output:
 		tuple path("6_ONT_centrifuge_most_abundant_species.tsv"), path("6_ONT_centrifuge_pasteurella_multocida_species_abundance.tsv"), emit: centrifuge_summary
+	when:
+	!params.skip_centrifuge
 	script:
 	"""
 	echo -e sampleID\\\tname\\\ttaxID\\\ttaxRank\\\tgenomeSize\\\tnumReads\\\tnumUniqueReads\\\tabundance > header_centrifuge
@@ -350,6 +358,8 @@ process summary_kaptive {
 		path(kaptive_files)
 	output:
 		path("7_ONT_kaptive_results.tsv"), emit: kaptive_summary
+	when:
+	!params.skip_kaptive3
 	script:
 	"""
 	echo -e sampleID\\\tBest match locus\\\tBest match type\\\tMatch confidence\\\tProblems\\\tIdentity\\\tCoverage\\\tLength discrepancy\\\tExpected genes in locus\\\tExpected genes in locus, details\\\tMissing expected genes\\\tOther genes in locus\\\tOther genes in locus, details\\\tExpected genes outside locus\\\tExpected genes outside locus, details\\\tOther genes outside locus\\\tOther genes outside locus, details\\\tTruncated genes, details\\\tExtra genes, details >  header_kaptive3
@@ -425,7 +435,7 @@ process snpeff {
 		tuple val(sample), path ("*clair3.snpeff.vcf"), emit: snpeff_results
 		path("snpeff.log")
 	when:
-	!params.skip_snpeff
+	!params.skip_clair3 || !params.skip_snpeff
 	shell:
 	'''
 	locus=`tail -1 !{kaptive_report} | cut -f3`
@@ -457,7 +467,7 @@ process snpsift {
                 tuple path(vcf), path ("*clair3.snpeff.high_impact.vcf"), emit: snpsift_results
                 path("snpsift.log")
         when:
-        !params.skip_snpeff
+	!params.skip_clair3 || !params.skip_snpeff
 	shell:
 	'''
 	SnpSift filter "( EFF[*].IMPACT = 'HIGH' ) && (FILTER = 'PASS')" -f !{vcf} > clair3.snpeff.high_impact.vcf
@@ -472,7 +482,9 @@ process report {
 	input:
 		path(clair3_files)
 	output:
-		tuple path("8_ONT_clair3_snpeff.vcf"), path("8_ONT_clair3_snpeff_high_impact.vcf"), path("10_ONT_genotype_report.tsv"), emit: genotype_report
+		tuple path("8_ONT_clair3_snpeff.vcf"), path("8_ONT_clair3_snpeff_high_impact.vcf"), path("10_ONT_subtype_report.tsv"), emit: subtype_report
+	when:
+	!params.skip_clair3
 	script:
 	"""
 	echo -e  SAMPLEID\\\tCHROM\\\tPOS\\\tID\\\tREF\\\tALT\\\tQUAL\\\tFILTER\\\tINFO\\\tFORMAT\\\tSAMPLE > header_clair3
@@ -480,15 +492,15 @@ process report {
 	cat header_clair3 8_clair3_snpeff_high_impact.vcf.tmp > 8_ONT_clair3_snpeff_high_impact.vcf
 	for file in `ls *_clair3.snpeff.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff.vcf.tmp; done
 	cat header_clair3 8_clair3_snpeff.vcf.tmp > 8_ONT_clair3_snpeff.vcf
-	touch 10_genotype_report.tsv
+	touch 10_subtype_report.tsv
 	while IFS=\$'\t' read sample chrom pos id ref alt qual filter info format formatsample; do
-		while IFS=\$'\t' read db_LPStype db_genotype db_isolate db_chrom db_pos db_type db_ref db_alt db_gene; do 
+		while IFS=\$'\t' read db_LPStype db_subtype db_isolate db_chrom db_pos db_type db_ref db_alt db_gene; do 
 			if [[ \$chrom == \$db_chrom && \$pos == \$db_pos && \$ref == \$db_ref && \$alt == \$db_alt ]]; then
 				if [[ \$sample != "SAMPLEID" ]]; then
-					echo "sample" \$sample": found genotype" \$db_genotype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_ONT_genotype_report.tsv
+					echo "sample" \$sample": found subtype" \$db_subtype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_ONT_subtype_report.tsv
 				fi
 			fi
-		done < ${params.genotype_db}
+		done < ${params.subtype_db}
 	done < 8_ONT_clair3_snpeff.vcf
 	"""
 }
@@ -520,6 +532,8 @@ process summary_mlst {
 		path(mlst_files)
 	output:
 		path("9_ONT_mlst.csv"), emit: mlst_summary
+	when:
+	!params.skip_mlst
 	script:
 	"""
 	for file in `ls *_mlst.csv`; do fileName=\$(basename \$file); sample=\${fileName%%_mlst.csv};  sed s/^/\${sample}_/ \$file >> 9_ONT_mlst.csv; done
@@ -529,20 +543,18 @@ process summary_mlst {
 process bakta {
 	cpus "${params.bakta_threads}"
 	tag "${sample}"
-	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
-	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*gbff'
-	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*tsv'
-	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*tsv'
+	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: "*.log"
+	publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*bakta*'
 	input:
 		tuple val(sample), path(assembly)
 	output:
-		tuple path("*.gbff"), path("*.tsv"), path("*.txt"), emit: bakta_results
+		path("*bakta*")
 		path("bakta.log")
 	when:
 	!params.skip_bakta
 	script:
 	"""
-	bakta --db ${params.bakta_db} --threads ${params.bakta_threads} --prefix ${sample}_bakta --proteins ${params.bakta_protein_ref} --output \$PWD/ ${params.bakta_args} ${assembly} 
+	bakta --db ${params.bakta_db} --threads ${params.bakta_threads} --prefix ${sample}_bakta --output \$PWD/ ${params.bakta_args} ${assembly}
 	cp .command.log bakta.log
 	"""
 }
@@ -571,6 +583,8 @@ process summary_amrfinder {
 		path(amrfinder_files)
 	output:
 		path("12_ONT_amrfinder.tsv"), emit: amrfinder_summary
+	when:
+	!params.skip_amrfinder
 	script:
 	"""
 	echo -e Name\\\tProtein id\\\tContig id\\\tStart\\\tStop\\\tStrand\\\tElement symbol\\\tElement name\\\tScope\\\tType\\\tSubtype\\\tClass\\\tSubclass\\\tMethod\\\tTarget length\\\tReference sequence length\\\t% Coverage of reference\\\t% Identity to reference\\\tAlignment length\\\tClosest reference accession\\\tClosest reference name\\\tHMM accession\\\tHMM description > header_amrfinder
