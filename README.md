@@ -14,7 +14,7 @@ Bioinformatics pipeline for Pasteurella multocida LPS typing using ONT sequencin
 
 ### 1. Basecalling
 
-The raw Nanopore in pod5 format are basecalled using [Dorado](https://github.com/nanoporetech/dorado). The barcoding kit should be specified to enable read demultiplexing (e.g "SQK-NBD114-24" or "SQK-NBD114-96"). By default, the basecalling model selected is the super-accuracy ("sup") model (parameter "basecalling_model"). The folder containing the pod5 files is an input parameter to the pipeline (parameter "pod5_dir"). 
+The basecalling and demultiplexing step are performed by the user outside of the pipeline.   
 
 ### 2. Nanopore reads quality metrics 
 
@@ -113,18 +113,9 @@ mkdir /scratch/project_mnt/SXXX/LPS_typing_ONT/samplesheet
 vim /scratch/project_mnt/SXXX/LPS_typing_ONT/samplesheet/samples.csv
 ```
 
-* **Basecalling and typing workflow** (soon)
-
-The samplesheet contains one line for each sample with the following information: the barcode identifier from the Nanopore barcoding kit (column "barcode_id") and the sample identifier (column "sample_id").
-```
-barcode_id,sample_id
-barcode17,PM1947
-barcode18,PM1422
-```
-
 * **Typing workflow**
    
-If basecalling is performed outside of the pipeline, the raw ONT pod5 files needs to be converted into basecalled reads using Dorado (fastq files). Then the user must copy the basecalled files in a directory (parameter "--fqdir") and specify the path to those files in the samplesheet file.   
+Since basecalling is performed outside of the pipeline, the raw ONT pod5 files needs to be converted into basecalled reads using Dorado (fastq files). Then the user must copy the basecalled files in a directory (parameter "--fqdir") and specify the path to those files in the samplesheet file.   
 The samplesheet contains one line for each sample with the following information: the sample identifier (column "sample_id") and the path to the corresponding basecalled read file (column "long_fastq"). File paths are given in relation to the workflow base directory, they are not absolute paths. 
 ```
 sample_id,long_fastq
@@ -135,29 +126,6 @@ PM1422,fastq/barcode18.simplex_duplex.fastq.gz
 **4) Run the pipeline**
 
 The pipeline will be launched on the HPC Bunya using the bash script nextflow.sh.   
-
-* **Basecalling and typing workflow** (soon)
-
-The raw ONT pod5 files must be copied in a directory (parameter "--pod5_dir").
-```
-pod5=/scratch/project_mnt/SXXX/LPS_typing_ONT_pipeline/pod5
-mkdir $pod5
-cp /path/to/pod5/files/ $pod5
-```
-
-Then the command to start the pipeline is:  
-`nextflow main.nf --samplesheet /path/to/samples.csv --pod5_dir /path/to/pod5/directory/ --outdir /path/to/outdir/ --slurm_account 'account' `
-```
---samplesheet: path to the samplesheet file
---outdir: path to the output directory to be created
---pod5_dir: path to the directory containing the Nanopore pod5 files
---slurm_account: name of the Bunya account (default='a_uqds') 
-```
-
-Once the nextflow.sh file is ready, the user can submit the pipeline on Bunya using the command:
-```
-sbatch nextflow.sh
-```
 
 * **Typing workflow**
   
@@ -202,11 +170,6 @@ In the nextflow.sh file, you must modify the directory "dir" line 16, the Bunya 
 ## Optional parameters
 
 Some parameters can be added to the command line in order to include or skip some steps and modify some parameters:
-
-1. Basecalling:
-* `--skip_basecalling`: skip the basecalling step (default=false)
-* `--basecalling_model`: basecalling model (default="sup"), see [details](https://github.com/nanoporetech/dorado?tab=readme-ov-file#automatic-model-selection-complex)
-* `--barcoding_kit`: name of the barcoding kit for Dorado (default="SQK-NBD114-24")
 
 2. Nanopore reads quality metrics:
 * `--skip_nanocomp`: skip the Nanocomp step (default=false)
