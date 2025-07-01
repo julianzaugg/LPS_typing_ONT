@@ -19,15 +19,12 @@ def helpMessage() {
 	Pasteurella multocida LPS analysis pipeline v${workflow.manifest.version}
 	=========================================
 	Usage:
-	i) Basecalling and typing workflow (soon)
-	nextflow main.nf --samplesheet --samplesheet /path/to/samples.csv --pod5_dir /path/to/pod5/directory/ --outdir /path/to/outdir/ --slurm_account account
-	ii) Typing workflow
+	Typing workflow
 	nextflow main.nf --samplesheet --samplesheet /path/to/samples.csv --fqdir /path/to/fastq/directory/ --outdir /path/to/outdir/ --slurm_account account
 
 	Required arguments:
 		--samplesheet				Path to the samplesheet file
 		--fqdir					Path to the directory containing the fastq files
-		--pod5_dir				Path to the directory containing the pod5 files
 		--outdir				Path to the output directory to be created
 		--slurm_account				Name of the Bunya account (default='a_uqds')
 
@@ -39,31 +36,6 @@ params.help = false
 if (params.help){
     helpMessage()
     exit 0
-}
-
-process basecalling {
-        cpus "${params.threads}"
-        label "gpu"
-        publishDir "$params.outdir/1_basecalling",  mode: 'copy', pattern: "*.log"
-        publishDir "$params.outdir/1_basecalling",  mode: 'copy', pattern: "*.tsv"
-        publishDir "$params.outdir/1_basecalling",  mode: 'copy', pattern: "*.bam"
-	input:
-                path(pod5_dir)
-        output:
-                tuple path("calls.bam"), path("summary.tsv"), emit: basecalling_results
-		path("SQK-*_barcode*.bam"), emit: demultiplexed_bam
-                path("summary.tsv"), emit: basecalling_summary
-		path("*.bam")
-		path("dorado.log")
-        when:
-        !params.skip_basecalling
-        script:
-        """
-	/scratch/project_mnt/S0091/valentine/LPS/sw/dorado-0.9.0-linux-x64/bin/dorado basecaller --kit-name ${params.barcoding_kit} ${params.basecalling_model} ${pod5_dir} > calls.bam
-	/scratch/project_mnt/S0091/valentine/LPS/sw/dorado-0.9.0-linux-x64/bin/dorado summary calls.bam > summary.tsv
-	/scratch/project_mnt/S0091/valentine/LPS/sw/dorado-0.9.0-linux-x64/bin/dorado demux --output-dir \$PWD/demux --no-classify calls.bam
-        cp .command.log dorado.log
-        """
 }
 
 process nanocomp {
@@ -596,105 +568,97 @@ process summary_amrfinder {
 }
 
 workflow {
-	if (!params.skip_basecalling) {
-		pod5 = Channel.fromPath("${params.pod5_dir}", checkIfExists: true )
-		basecalling(pod5)
-		ch_samplesheet_ONT_pod5=Channel.fromPath( "${params.samplesheet}", checkIfExists:true )
-		ch_samplesheet_ONT_pod5.view()
-		//rename_bam(basecalling.out.demultiplexed_bam.combine(ch_samplesheet_ONT_pod5))
-	} else if (params.skip_basecalling) {
-		Channel.fromPath( "${params.samplesheet}", checkIfExists:true )
-        	.splitCsv(header:true, sep:',')
-        	.map { row -> tuple(row.sample_id, file(row.long_fastq, checkIfExists: true)) }
-        	.set { ch_samplesheet_ONT }
-		ch_samplesheet_ONT.view()
+	Channel.fromPath( "${params.samplesheet}", checkIfExists:true )
+        .splitCsv(header:true, sep:',')
+        .map { row -> tuple(row.sample_id, file(row.long_fastq, checkIfExists: true)) }
+        .set { ch_samplesheet_ONT }
+	ch_samplesheet_ONT.view()
+	Channel.fromPath( "${params.samplesheet}", checkIfExists:true )
+	.splitCsv(header:true, sep:',')
+	.map { row -> file(row.long_fastq, checkIfExists: true) }
+	.set { ch_samplesheet_fastq }
+	if (!params.skip_nanocomp) {
 		Channel.fromPath( "${params.samplesheet}", checkIfExists:true )
 		.splitCsv(header:true, sep:',')
-		.map { row -> file(row.long_fastq, checkIfExists: true) }
-		.set { ch_samplesheet_fastq }
-		if (!params.skip_nanocomp) {
-			Channel.fromPath( "${params.samplesheet}", checkIfExists:true )
-			.splitCsv(header:true, sep:',')
-			.map { row -> row.sample_id }
-			.collect()
-			.set { ch_samplesheet_sampleID }
-			ch_samplesheet_sampleID.toList().view()
-			nanocomp(ch_samplesheet_sampleID,ch_samplesheet_fastq.collect())
+		.map { row -> row.sample_id }
+		.collect()
+		.set { ch_samplesheet_sampleID }
+		ch_samplesheet_sampleID.toList().view()
+		nanocomp(ch_samplesheet_sampleID,ch_samplesheet_fastq.collect())
+	}
+	if (!params.skip_assembly) {
+		flye(ch_samplesheet_ONT)
+		if (!params.skip_polishing) {
+			medaka(flye.out.assembly_fasta)
 		}
-		if (!params.skip_assembly) {
-			flye(ch_samplesheet_ONT)
-			if (!params.skip_polishing) {
-				medaka(flye.out.assembly_fasta)
-			}
-			summary_flye(flye.out.assembly_info.collect())
+		summary_flye(flye.out.assembly_info.collect())
+	}
+	if (!params.skip_quast) {
+		if (!params.skip_polishing) {
+			quast(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			quast(flye.out.assembly_only)
 		}
-		if (!params.skip_quast) {
-			if (!params.skip_polishing) {
-				quast(medaka.out.polished_medaka)
-			} else if (params.skip_polishing) {
-				quast(flye.out.assembly_only)
-			}
-			summary_quast(quast.out.quast_results.collect())
+		summary_quast(quast.out.quast_results.collect())
+	}
+	if (!params.skip_checkm) {
+		if (!params.skip_polishing) {
+			checkm(medaka.out.polished_medaka)
+		}  else if (params.skip_polishing) {
+			checkm(flye.out.assembly_only)
 		}
-		if (!params.skip_checkm) {
-			if (!params.skip_polishing) {
-				checkm(medaka.out.polished_medaka)
-			}  else if (params.skip_polishing) {
-				checkm(flye.out.assembly_only)
-			}
-			summary_checkm(checkm.out.checkm_results.collect())
+		summary_checkm(checkm.out.checkm_results.collect())
+	}
+	if (!params.skip_centrifuge) {
+		if (!params.skip_download_centrifuge_db) {
+			ch_centrifuge_db=Channel.value( "${params.centrifuge_db_download_file}")
+			centrifuge_download_db(ch_centrifuge_db)
+			centrifuge(ch_samplesheet_ONT.combine(centrifuge_download_db.out.centrifuge_db))
+		} else if (params.skip_download_centrifuge_db) {	
+			ch_centrifuge_db=Channel.fromPath( "${params.outdir}/../databases/centrifuge/*.cf" ).collect()
+			ch_centrifuge_db.view()
+			centrifuge(ch_samplesheet_ONT.combine(ch_centrifuge_db))
 		}
-		if (!params.skip_centrifuge) {
-			if (!params.skip_download_centrifuge_db) {
-				ch_centrifuge_db=Channel.value( "${params.centrifuge_db_download_file}")
-				centrifuge_download_db(ch_centrifuge_db)
-				centrifuge(ch_samplesheet_ONT.combine(centrifuge_download_db.out.centrifuge_db))
-			} else if (params.skip_download_centrifuge_db) {	
-				ch_centrifuge_db=Channel.fromPath( "${params.outdir}/../databases/centrifuge/*.cf" ).collect()
-				ch_centrifuge_db.view()
-				centrifuge(ch_samplesheet_ONT.combine(ch_centrifuge_db))
-			}
-			summary_centrifuge(centrifuge.out.centrifuge_report.collect())
+		summary_centrifuge(centrifuge.out.centrifuge_report.collect())
+	}
+	if (!params.skip_kaptive3) {
+		if (!params.skip_polishing) {
+			kaptive3(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			kaptive3(flye.out.assembly_only)
 		}
-		if (!params.skip_kaptive3) {
-			if (!params.skip_polishing) {
-				kaptive3(medaka.out.polished_medaka)
-			} else if (params.skip_polishing) {
-				kaptive3(flye.out.assembly_only)
-			}
-			summary_kaptive(kaptive3.out.kaptive_tsv.collect())
-			if (!params.skip_clair3) {
-				minimap(ch_samplesheet_ONT.join(kaptive3.out.kaptive_results))
-				clair3(minimap.out.minimap_results)
-				if (!params.skip_snpeff) {
-					snpeff(clair3.out.clair3_results)
-					snpsift(snpeff.out.snpeff_results)
-					report(snpsift.out.snpsift_results.collect())
-				}
-			}
-		}	
-		if (!params.skip_mlst) {
-			if (!params.skip_polishing) {
-				mlst(medaka.out.polished_medaka)
-			} else if (params.skip_polishing) {
-				mlst(flye.out.assembly_only)
-			}
-			summary_mlst(mlst.out.mlst_results.collect())
-		}
-		if (!params.skip_bakta) {
-			if (!params.skip_polishing) {
-				bakta(medaka.out.polished_medaka)
-			} else if (params.skip_polishing) {
-				bakta(flye.out.assembly_only)
+		summary_kaptive(kaptive3.out.kaptive_tsv.collect())
+		if (!params.skip_clair3) {
+			minimap(ch_samplesheet_ONT.join(kaptive3.out.kaptive_results))
+			clair3(minimap.out.minimap_results)
+			if (!params.skip_snpeff) {
+				snpeff(clair3.out.clair3_results)
+				snpsift(snpeff.out.snpeff_results)
+				report(snpsift.out.snpsift_results.collect())
 			}
 		}
-		if (!params.skip_amrfinder) {
-			if (!params.skip_polishing) {
-				amrfinder(medaka.out.polished_medaka)
-			} else if (params.skip_polishing) {
-				amrfinder(flye.out.assembly_only)
-			}
-			summary_amrfinder(amrfinder.out.amrfinder_results.collect())
+	}	
+	if (!params.skip_mlst) {
+		if (!params.skip_polishing) {
+			mlst(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			mlst(flye.out.assembly_only)
 		}
+		summary_mlst(mlst.out.mlst_results.collect())
+	}
+	if (!params.skip_bakta) {
+		if (!params.skip_polishing) {
+			bakta(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			bakta(flye.out.assembly_only)
+		}
+	}
+	if (!params.skip_amrfinder) {
+		if (!params.skip_polishing) {
+			amrfinder(medaka.out.polished_medaka)
+		} else if (params.skip_polishing) {
+			amrfinder(flye.out.assembly_only)
+		}
+		summary_amrfinder(amrfinder.out.amrfinder_results.collect())
 	}
 }
