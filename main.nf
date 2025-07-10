@@ -453,10 +453,11 @@ process report {
 	publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*tsv'
 	input:
 		path(clair3_files)
+		path(kaptive_summary)
 	output:
 		tuple path("8_ONT_clair3_snpeff.vcf"), path("8_ONT_clair3_snpeff_high_impact.vcf"), path("10_ONT_subtype_report.tsv"), emit: subtype_report
 	when:
-	!params.skip_clair3
+	!params.skip_clair3 && !params.skip_kaptive3
 	script:
 	"""
 	echo -e  SAMPLEID\\\tCHROM\\\tPOS\\\tID\\\tREF\\\tALT\\\tQUAL\\\tFILTER\\\tINFO\\\tFORMAT\\\tSAMPLE > header_clair3
@@ -464,16 +465,24 @@ process report {
 	cat header_clair3 8_clair3_snpeff_high_impact.vcf.tmp > 8_ONT_clair3_snpeff_high_impact.vcf
 	for file in `ls *_clair3.snpeff.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff.vcf.tmp; done
 	cat header_clair3 8_clair3_snpeff.vcf.tmp > 8_ONT_clair3_snpeff.vcf
-	touch 10_subtype_report.tsv
+	echo -e SAMPLE\\\tTYPE\\\tSUBTYPE\\\tVARTYPE\\\tISOLATE_DATABASE\\\tCHROM\\\tPOS\\\tREF\\\tALT\\\tGENE >> 10_ONT_subtype_report.tsv.tmp
 	while IFS=\$'\t' read sample chrom pos id ref alt qual filter info format formatsample; do
 		while IFS=\$'\t' read db_LPStype db_subtype db_isolate db_chrom db_pos db_type db_ref db_alt db_gene; do 
 			if [[ \$chrom == \$db_chrom && \$pos == \$db_pos && \$ref == \$db_ref && \$alt == \$db_alt ]]; then
 				if [[ \$sample != "SAMPLEID" ]]; then
-					echo "sample" \$sample": found subtype" \$db_subtype "with" \$db_type "(similar to isolate" \$db_isolate")" >> 10_ONT_subtype_report.tsv
+					echo \$sample"\t"\$db_LPStype"\t"\$db_subtype"\t"\$db_type"\t"\$db_isolate"\t"\$db_chrom"\t"\$db_pos"\t"\$db_ref"\t"\$db_alt"\t"\$db_gene >> 10_ONT_subtype_report.tsv.tmp
 				fi
 			fi
 		done < ${params.subtype_db}
 	done < 8_ONT_clair3_snpeff.vcf
+	awk -F'\t' 'NR > 1 {split(\$2, a, "-"); gsub("LPS", "L", a[1]); print \$1 "\t" a[1]}' "${kaptive_summary}" > kaptive_tmp
+	cut -f1 10_ONT_subtype_report.tsv.tmp | grep -v SAMPLE | uniq > list_samples_clair_exclude
+	while IFS=\$'\t' read sample_to_exclude; do 
+		grep -v \$sample_to_exclude kaptive_tmp > kaptive_to_keep
+		mv kaptive_to_keep kaptive_tmp
+	done < list_samples_clair_exclude
+	awk '{print \$0 "\tNA\tNA\tNA\tNA\tNA\tNA\tNA\tNA"}' kaptive_tmp > kaptive_to_keep.tsv
+	cat 10_ONT_subtype_report.tsv.tmp kaptive_to_keep.tsv > 10_ONT_subtype_report.tsv
 	"""
 }
 
@@ -634,7 +643,9 @@ workflow {
 			if (!params.skip_snpeff) {
 				snpeff(clair3.out.clair3_results)
 				snpsift(snpeff.out.snpeff_results)
-				report(snpsift.out.snpsift_results.collect())
+				clair_tab_ch=snpsift.out.snpsift_results.collect()
+				kaptive_summary_ch=summary_kaptive.out.kaptive_summary
+				report(clair_tab_ch,kaptive_summary_ch)
 			}
 		}
 	}	
