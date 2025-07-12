@@ -54,7 +54,7 @@ The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome
 
 ### 10.  Subtype report
 
-The pipeline generates a subtype report file (10_ONT_subtype_report.tsv)summarising the variants found in the subtype database. To be reported, the variant identified by clair3 must be present in the subtype database with the following conditions:  
+The pipeline generates a subtype report file (10_ONT_subtype_report.tsv) summarising the variants found in the subtype database. To be reported, the variant identified by clair3 must be present in the subtype database with the following conditions:  
 - the variant must be identified at the same position in the reference sequence and
 - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.  
 
@@ -269,9 +269,17 @@ Each sample folder will contain the following folders:
         - all variants: 8_ONT_clair3_snpeff.vcf  
         - only variants predicted to have a high impact on the protein: 8_ONT_clair3_snpeff_high_impact.vcf  
     * MLST results (9_ONT_mlst.csv)  
-    * Subtype results summarising the variants found in the subtype database (10_ONT_subtype_report.tsv). To be reported, the variant identified by clair3 must be present in the subtype database with the following conditions:
-       - the variant must be identified at the same position in the reference sequence and
-       - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.
+    * Subtype results summarising the variants found in the subtype database (10_ONT_subtype_report.tsv). The columns in this file represents:
+        - SAMPLE: sample identifier (sample_id in the samplesheet)  
+        - TYPE: LPS type assigned by Kaptive  
+        - SUBTYPE: LPS subtype assigned by the pipeline (using the subtype database)    
+        - VARTYPE: description of the variant   
+        - ISOLATE_DATABASE: reference isolate from the subtype database that contained that variant  
+        - CHROM: name of the reference sequence for the LPS locus type  
+        - POS: variant position in the reference sequence for the LPS locus type
+        - REF: reference allele sequence present in the LPS reference sequence  
+        - ALT: alternate allele sequence identified in the sample  
+        - GENE: gene containing the variant  
     * AMRFinderPlus results (12_ONT_amrfinder.tsv) 
 * **11_bakta:** Bakta genome annotation output files. The output files are described [here](https://github.com/oschwengers/bakta?tab=readme-ov-file#output).
     * Annotations & sequences in (multi) GenBank format (sample_id_bakta.gbff)  
