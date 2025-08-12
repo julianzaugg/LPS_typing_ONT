@@ -784,8 +784,10 @@ workflow {
                         sylph.out.sylph_profile.combine(syph_tax_metadata_tuple).set{ch_sylph_tax_input}
                         sylph_tax(ch_sylph_tax_input)
                 }
-                // path("*taxonomic_abundance.tsv"), path("*sequence_abundance.tsv"), emit: sylph_tax
+                
                 summary_sylph(sylph_tax.out.sylph_tax.collect())
+                sylph_summary_per_sample(sylph_tax_results).collect().set{all_sylph_summaries}
+                summary_sylph(all_sylph_summaries)
         }
         if (!params.skip_centrifuge) {
                 if (!params.skip_download_centrifuge_db) {
