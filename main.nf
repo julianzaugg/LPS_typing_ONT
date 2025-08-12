@@ -905,7 +905,7 @@ workflow {
                         } else if (params.skip_polishing) {
                                 amrfinder(flye.out.assembly_only.combine(download_amrfinder_db.out.amrfinder_db))
                         }
-                else{
+                } else{
                         ch_amrfinder_db=Channel.fromPath( "${params.amrfinder_db}" ).collect()
                         if (!params.skip_polishing) {
                                 amrfinder(medaka.out.polished_medaka.combine(ch_amrfinder_db))
