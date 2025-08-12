@@ -350,7 +350,7 @@ process summary_sylph {
         !params.skip_sylph
         script:
         """
-        echo -e "sample\ttop_species_by_taxonomic_abundance\ttaxonomic_abundance_for_top_species\ttop_species_by_sequence_abundance\tsequence_abundance_for_top_species\tPasteurella_multocida\ttaxonomic_abundance_for_pasteurella_multocida$
+        echo -e "sample\ttop_species_by_taxonomic_abundance\ttaxonomic_abundance_for_top_species\ttop_species_by_sequence_abundance\tsequence_abundance_for_top_species\tPasteurella_multocida\ttaxonomic_abundance_for_pasteurella_multocida\tsequence_abundance_for_pasteurella_multocida" > 6_ONT_sylph_summary.tsv
         for file in ${sylph_summary_file.join(' ')}; do
             cat \$file >> 6_ONT_sylph_summary.tsv
         done
