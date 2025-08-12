@@ -197,6 +197,20 @@ process summary_flye {
         """
 }
 
+process download_checkm_db {
+        publishDir "$params.outdir/checkm_database",  mode: 'copy'
+        output:
+                path("checkm_data_2015_01_16"), emit: checkm_db_folder
+        when:
+        params.download_checkm_db
+        script:
+        """
+        wget https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz
+        mkdir checkm_data_2015_01_16
+        tar -xvzf checkm_data_2015_01_16.tar.gz -C checkm_data_2015_01_16
+        """
+}
+
 process checkm {
         cpus "${params.threads}"
         tag "${sample}"
@@ -731,11 +745,21 @@ workflow {
                 summary_quast(quast.out.quast_results.collect())
         }
         if (!params.skip_checkm) {
-                if (!params.skip_polishing) {
-                        checkm(medaka.out.polished_medaka)
-                }  else if (params.skip_polishing) {
-                        checkm(flye.out.assembly_only)
+                if (params.download_checkm_db) {
+                        download_checkm_db()
+                        if (!params.skip_polishing) {
+                                checkm(medaka.out.polished_medaka.combine(download_checkm_db.out.checkm_db_folder))
+                        }  else if (params.skip_polishing) {
+                                checkm(flye.out.assembly_only.combine(download_checkm_db.out.checkm_db_folder))
+                        }
+                } else{
+                        if (!params.skip_polishing) {
+                                checkm(medaka.out.polished_medaka.combine(Channel.fromPath( "${params.outdir}/../databases/checkm_data_2015_01_16")))
+                        }  else if (params.skip_polishing) {
+                                checkm(flye.out.assembly_only.combine(Channel.fromPath( "${params.outdir}/../databases/checkm_data_2015_01_16")))
+                        } 
                 }
+                
                 summary_checkm(checkm.out.checkm_results.collect())
         }
         if (!params.skip_sylph) {
