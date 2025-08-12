@@ -785,7 +785,10 @@ workflow {
                         sylph_tax(ch_sylph_tax_input)
                 }
                 
-                summary_sylph(sylph_tax.out.sylph_tax.collect())
+                sylph_tax.out.sylph_tax
+                .map { sample, tax, seq -> tuple(sample, tax, seq) }
+                .set{sylph_tax_results}
+
                 sylph_summary_per_sample(sylph_tax_results).collect().set{all_sylph_summaries}
                 summary_sylph(all_sylph_summaries)
         }
