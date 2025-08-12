@@ -324,11 +324,11 @@ process sylph_tax {
 }
 
 process sylph_summary_per_sample {
-        //publishDir "$params.outdir/$sample/6_sylph",  mode: 'copy', pattern: "*.tsv", saveAs: { filename -> "${sample}_$filename" }
+        //publishDir "$params.outdir/$sample/6_sylph",  mode: 'copy', pattern: "*.tsv"
         input:
                tuple val(sample), path(taxonomic_abundances), path(sequence_abundances)
         output:
-               tuple val(sample), path("sylph_summary.tsv")
+               tuple val(sample), path("${sample}_sylph_summary.tsv")
         script:
         """
         taxonomic_abundance_top_species=\$(grep "s__" ${taxonomic_abundances} | grep -v "t__" | sort -t \$'\t' -gr -k 2 | head -n 1 | sed "s/.*s__//g")
@@ -336,22 +336,22 @@ process sylph_summary_per_sample {
 
         taxonomic_abundance_pasteurella_multocida=\$(grep "s__Pasteurella multocida" ${taxonomic_abundances} | grep -v "t__" | sort -t \$'\t' -gr -k 2 | head -n 1 | sed "s/.*s__//g" | awk -F "\t" '{print \$2}')
         sequence_abundance_pasteurella_multocida=\$(grep "s__Pasteurella multocida" ${sequence_abundances} | grep -v "t__" | sort -t \$'\t' -gr -k 2 | head -n 1 | sed "s/.*s__//g" | awk -F "\t" '{print \$2}')
-        echo -e "${sample}\t\$taxonomic_abundance_top_species\t\$sequence_abundance_top_species\tPasteurella_multocida\t\$taxonomic_abundance_pasteurella_multocida\t\$sequence_abundance_pasteurella_multocida" > sylph_summary.tsv
+        echo -e "${sample}\t\$taxonomic_abundance_top_species\t\$sequence_abundance_top_species\tPasteurella_multocida\t\$taxonomic_abundance_pasteurella_multocida\t\$sequence_abundance_pasteurella_multocida" > ${sample}_sylph_summary.tsv
         """
 }
 
 process summary_sylph {
         publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*tsv'
         input:
-                tuple val(sample), path(sylph_summary_file)
+                path(sylph_summary_files)
         output:
-                tuple path("6_ONT_sylph_summary.tsv"), emit: sylph_summary
+                path("6_ONT_sylph_summary.tsv"), emit: sylph_summary
         when:
         !params.skip_sylph
         script:
         """
         echo -e "sample\ttop_species_by_taxonomic_abundance\ttaxonomic_abundance_for_top_species\ttop_species_by_sequence_abundance\tsequence_abundance_for_top_species\tPasteurella_multocida\ttaxonomic_abundance_for_pasteurella_multocida\tsequence_abundance_for_pasteurella_multocida" > 6_ONT_sylph_summary.tsv
-        for file in ${sylph_summary_file.join(' ')}; do
+        for file in ${sylph_summary_files.join(' ')}; do
             cat \$file >> 6_ONT_sylph_summary.tsv
         done
         """
