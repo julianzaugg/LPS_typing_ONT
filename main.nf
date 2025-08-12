@@ -202,7 +202,7 @@ process download_checkm_db {
         output:
                 path("checkm_data_2015_01_16"), emit: checkm_db_folder
         when:
-        params.download_checkm_db
+        !params.skip_download_checkm_db
         script:
         """
         wget https://data.ace.uq.edu.au/public/CheckM_databases/checkm_data_2015_01_16.tar.gz
@@ -745,7 +745,7 @@ workflow {
                 summary_quast(quast.out.quast_results.collect())
         }
         if (!params.skip_checkm) {
-                if (params.download_checkm_db) {
+                if (!params.download_checkm_db) {
                         download_checkm_db()
                         if (!params.skip_polishing) {
                                 checkm(medaka.out.polished_medaka.combine(download_checkm_db.out.checkm_db_folder))
