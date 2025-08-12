@@ -660,7 +660,7 @@ process download_bakta_db {
     output:
         path("bakta_db"), emit: bakta_db_folder
     when:
-    params.download_bakta_db
+    !params.skip_download_bakta_db
     script:
     """
     bakta_db download --output bakta_db --type full
@@ -691,7 +691,7 @@ process download_amrfinder_db {
         output:
                 path("amrfinderplus_db"), emit: amrfinder_db
         when:
-        params.download_amrfinder_db
+        !params.skip_download_amrfinder_db
         script:
         """
         amrfinder_update -d amrfinderplus_db
