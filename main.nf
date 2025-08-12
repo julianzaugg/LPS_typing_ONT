@@ -745,7 +745,7 @@ workflow {
                 summary_quast(quast.out.quast_results.collect())
         }
         if (!params.skip_checkm) {
-                if (!params.download_checkm_db) {
+                if (!params.skip_download_checkm_db) {
                         download_checkm_db()
                         if (!params.skip_polishing) {
                                 checkm(medaka.out.polished_medaka.combine(download_checkm_db.out.checkm_db_folder))
