@@ -711,7 +711,7 @@ process amrfinder {
         !params.skip_amrfinder
         script:
         """
-        amrfinder -n ${assembly} -d ${params.amrfinder_db} -o \$PWD/${sample}_amrfinder.tsv --name ${sample} --threads ${params.threads} --plus ${params.amrfinder_args}
+        amrfinder -n ${assembly} -d ${amrfinder_db} -o \$PWD/${sample}_amrfinder.tsv --name ${sample} --threads ${params.threads} --plus ${params.amrfinder_args}
         cp .command.log amrfinder.log
         """
 }       
