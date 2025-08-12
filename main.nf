@@ -198,7 +198,7 @@ process summary_flye {
 }
 
 process download_checkm_db {
-        publishDir "$params.outdir/checkm_database",  mode: 'copy'
+        publishDir "$params.outdir/databases/checkm_database",  mode: 'copy'
         output:
                 path("checkm_data_2015_01_16"), emit: checkm_db_folder
         when:
@@ -254,7 +254,7 @@ process summary_checkm {
 process sylph_download_db {
         cpus 1
         label "cpu"
-        publishDir "$params.outdir/sylph_database", mode: 'copy', pattern: "*.syldb"
+        publishDir "$params.outdir/databases/sylph_database", mode: 'copy', pattern: "*.syldb"
         input:
                 val(db)
         output:
@@ -291,7 +291,7 @@ process sylph {
 process sylph_tax_download_metadata {
         cpus 1
         label "cpu"
-        publishDir "$params.outdir/sylph_database", mode: 'copy', pattern: "*.gz"
+        publishDir "$params.outdir/databases/sylph_database", mode: 'copy', pattern: "*.gz"
         input:
                 val(metadata_file)
         output:
@@ -375,7 +375,7 @@ process centrifuge_download_db {
         cpus 1
         label "high_memory"
         label "cpu"
-        publishDir "$params.outdir/centrifuge_database",  mode: 'copy', pattern: "*.cf"
+        publishDir "$params.outdir/databases/centrifuge_database",  mode: 'copy', pattern: "*.cf"
         input:
                 val(db)
         output:
@@ -655,13 +655,25 @@ process summary_mlst {
         """
 }
 
+process download_bakta_db {
+    publishDir "$params.outdir/databases/bakta_database",  mode: 'copy'
+    output:
+        path("bakta_db"), emit: bakta_db_folder
+    when:
+    params.download_bakta_db
+    script:
+    """
+    bakta_db download --output bakta_db --type full
+    """
+}
+
 process bakta {
         cpus "${params.bakta_threads}"
         tag "${sample}"
         publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: "*.log"
         publishDir "$params.outdir/$sample/11_bakta",  mode: 'copy', pattern: '*bakta*'
         input:
-                tuple val(sample), path(assembly)
+                tuple val(sample), path(assembly), path(bakta_db)
         output:
                 path("*bakta*")
                 path("bakta.log")
@@ -669,8 +681,20 @@ process bakta {
         !params.skip_bakta
         script:
         """
-        bakta --db ${params.bakta_db} --threads ${params.bakta_threads} --prefix ${sample}_bakta --output \$PWD/ ${params.bakta_args} ${assembly}
+        bakta --db ${bakta_db} --threads ${params.bakta_threads} --prefix ${sample}_bakta --output \$PWD/ ${params.bakta_args} ${assembly}
         cp .command.log bakta.log
+        """
+}
+
+process download_amrfinder_db {
+        publishDir "$params.outdir/databases/amrfinderplus_database",  mode: 'copy'
+        output:
+                path("amrfinderplus_db"), emit: amrfinder_db
+        when:
+        params.download_amrfinder_db
+        script:
+        """
+        amrfinder_update -d amrfinderplus_db
         """
 }
 
@@ -679,7 +703,7 @@ process amrfinder {
         publishDir "$params.outdir/$sample/12_amrfinder",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
         publishDir "$params.outdir/$sample/12_amrfinder",  mode: 'copy', pattern: '*tsv'
         input:
-                tuple val(sample), path(assembly)
+                tuple val(sample), path(assembly), path(amrfinder_db)
         output:
                 path("*.tsv"), emit: amrfinder_results
                 path("amrfinder.log")
@@ -754,9 +778,9 @@ workflow {
                         }
                 } else{
                         if (!params.skip_polishing) {
-                                checkm(medaka.out.polished_medaka.combine(Channel.fromPath( "${params.outdir}/../databases/checkm_data_2015_01_16")))
+                                checkm(medaka.out.polished_medaka.combine(Channel.fromPath( "${params.checkm_db}")))
                         }  else if (params.skip_polishing) {
-                                checkm(flye.out.assembly_only.combine(Channel.fromPath( "${params.outdir}/../databases/checkm_data_2015_01_16")))
+                                checkm(flye.out.assembly_only.combine(Channel.fromPath( "${params.checkm_db}")))
                         } 
                 }
                 
@@ -790,8 +814,8 @@ workflow {
                         sylph_tax(ch_sylph_tax_input)
 
                 } else if (params.skip_download_sylph_db) {
-                        ch_sylph_db=Channel.fromPath( "${params.outdir}/../databases/sylph/*.syldb" ).collect()
-                        ch_sylph_metadata=Channel.fromPath("${params.outdir}/../databases/sylph/*.tsv.gz").collect()
+                        ch_sylph_db=Channel.fromPath( "${params.sylph_db}").collect()
+                        ch_sylph_metadata=Channel.fromPath("${params.sylph_metadata}").collect()
 
                         // Run sylph
                         ch_sylph_db.map { dbs -> tuple([dbs]) }.set { ch_db_tuple }
@@ -822,7 +846,7 @@ workflow {
                         centrifuge_download_db(ch_centrifuge_db)
                         centrifuge(ch_samplesheet_ONT.combine(centrifuge_download_db.out.centrifuge_db))
                 } else if (params.skip_download_centrifuge_db) {        
-                        ch_centrifuge_db=Channel.fromPath( "${params.outdir}/../databases/centrifuge/*.cf" ).collect()
+                        ch_centrifuge_db=Channel.fromPath("${params.centrifuge_db}" ).collect()
                         ch_centrifuge_db.view()
                         centrifuge(ch_samplesheet_ONT.combine(ch_centrifuge_db))
                 }
@@ -856,17 +880,38 @@ workflow {
                 summary_mlst(mlst.out.mlst_results.collect())
         }
         if (!params.skip_bakta) {
-                if (!params.skip_polishing) {
-                        bakta(medaka.out.polished_medaka)
-                } else if (params.skip_polishing) {
-                        bakta(flye.out.assembly_only)
+                if (!params.skip_download_bakta_db) {
+                        download_bakta_db()
+                        if (!params.skip_polishing) {
+                                bakta(medaka.out.polished_medaka.combine(download_bakta_db.out.bakta_db))
+                        } else if (params.skip_polishing) {
+                                bakta(flye.out.assembly_only)
+                        }
+                } else {
+                        ch_bakta_db=Channel.fromPath( "${params.bakta_db}" ).collect()
+                        if (!params.skip_polishing) {
+                                bakta(medaka.out.polished_medaka.combine(ch_bakta_db))
+                        } else if (params.skip_polishing) {
+                                bakta(flye.out.assembly_only.combine(ch_bakta_db))
+                        }
+
                 }
         }
         if (!params.skip_amrfinder) {
-                if (!params.skip_polishing) {
-                        amrfinder(medaka.out.polished_medaka)
-                } else if (params.skip_polishing) {
-                        amrfinder(flye.out.assembly_only)
+                if (!params.skip_download_amrfinder_db) {
+                        download_amrfinder_db()
+                        if (!params.skip_polishing) {
+                                amrfinder(medaka.out.polished_medaka.combine(download_amrfinder_db.out.amrfinder_db))
+                        } else if (params.skip_polishing) {
+                                amrfinder(flye.out.assembly_only.combine(download_amrfinder_db.out.amrfinder_db))
+                        }
+                else{
+                        ch_amrfinder_db=Channel.fromPath( "${params.amrfinder_db}" ).collect()
+                        if (!params.skip_polishing) {
+                                amrfinder(medaka.out.polished_medaka.combine(ch_amrfinder_db))
+                        } else if (params.skip_polishing) {
+                                amrfinder(flye.out.assembly_only.combine(ch_amrfinder_db))
+                        } 
                 }
                 summary_amrfinder(amrfinder.out.amrfinder_results.collect())
         }
