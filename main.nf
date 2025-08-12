@@ -219,7 +219,7 @@ process checkm {
         publishDir "$params.outdir/$sample/5_checkm",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
         publishDir "$params.outdir/$sample/5_checkm",  mode: 'copy', pattern: '*tsv'
         input:
-                tuple val(sample), path(assembly)
+                tuple val(sample), path(assembly), path(checkm_db)
         output:
                 path("*checkm_lineage_wf_results.tsv"),  emit: checkm_results
                 path("checkm.log")
@@ -227,8 +227,8 @@ process checkm {
         !params.skip_checkm
         script:
         """
-        export CHECKM_DATA_PATH=${params.checkm_db}
-        checkm data setRoot ${params.checkm_db}
+        export CHECKM_DATA_PATH=${checkm_db}
+        checkm data setRoot ${checkm_db}
         checkm lineage_wf --reduced_tree `dirname ${assembly}` \$PWD --threads ${params.threads} --pplacer_threads ${params.threads} --tab_table -f checkm_lineage_wf_results.tsv -x fasta
         mv checkm_lineage_wf_results.tsv ${sample}_checkm_lineage_wf_results.tsv
         cp .command.log checkm.log
