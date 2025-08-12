@@ -885,7 +885,7 @@ workflow {
                         if (!params.skip_polishing) {
                                 bakta(medaka.out.polished_medaka.combine(download_bakta_db.out.bakta_db))
                         } else if (params.skip_polishing) {
-                                bakta(flye.out.assembly_only)
+                                bakta(flye.out.assembly_only.combine(download_bakta_db.out.bakta_db))
                         }
                 } else {
                         ch_bakta_db=Channel.fromPath( "${params.bakta_db}" ).collect()
