@@ -658,7 +658,7 @@ process summary_mlst {
 process download_bakta_db {
     publishDir "$params.outdir/databases/bakta_database",  mode: 'copy'
     output:
-        path("bakta_db"), emit: bakta_db_folder
+        path("bakta_db"), emit: bakta_db
     when:
     !params.skip_download_bakta_db
     script:
@@ -711,7 +711,7 @@ process amrfinder {
         !params.skip_amrfinder
         script:
         """
-        amrfinder -n ${assembly} -d ${amrfinder_db} -o \$PWD/${sample}_amrfinder.tsv --name ${sample} --threads ${params.threads} --plus ${params.amrfinder_args}
+        amrfinder -n ${assembly} -d ${amrfinder_db}/latest -o \$PWD/${sample}_amrfinder.tsv --name ${sample} --threads ${params.threads} --plus ${params.amrfinder_args}
         cp .command.log amrfinder.log
         """
 }       
