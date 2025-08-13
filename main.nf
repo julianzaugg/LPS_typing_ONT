@@ -610,7 +610,7 @@ process report {
                 done < ${params.subtype_db}
         done < 8_ONT_clair3_snpeff.vcf
         awk -F'\t' 'NR > 1 {split(\$2, a, "-"); gsub("LPS", "L", a[1]); print \$1 "\t" a[1]}' "${kaptive_summary}" > kaptive_tmp
-        cut -f1 10_ONT_subtype_report.tsv.tmp | grep -v SAMPLE | uniq > list_samples_clair_exclude
+        cut -f1 10_ONT_subtype_report.tsv.tmp | grep -v SAMPLE | sort | uniq > list_samples_clair_exclude
         while IFS=\$'\t' read sample_to_exclude; do 
                 grep -v \$sample_to_exclude kaptive_tmp > kaptive_to_keep
                 mv kaptive_to_keep kaptive_tmp
