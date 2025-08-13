@@ -837,7 +837,7 @@ workflow {
                 .map { sample, tax, seq -> tuple(sample, tax, seq) }
                 .set{sylph_tax_results}
 
-                sylph_summary_per_sample(sylph_tax_results).collect().set{all_sylph_summaries}
+                sylph_summary_per_sample(sylph_tax_results).map{sample, summary_file -> summary_file }.collect().set{all_sylph_summaries}
                 summary_sylph(all_sylph_summaries)
         }
         if (!params.skip_centrifuge) {
