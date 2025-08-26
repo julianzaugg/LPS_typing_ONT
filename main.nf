@@ -371,66 +371,6 @@ process summary_sylph {
         """
 }
 
-process centrifuge_download_db {
-        cpus 1
-        label "high_memory"
-        label "cpu"
-        publishDir "$params.outdir/databases/centrifuge_database",  mode: 'copy', pattern: "*.cf"
-        input:
-                val(db)
-        output:
-                tuple path("*.1.cf"), path("*.2.cf"), path("*.3.cf"), path("*.4.cf"), emit: centrifuge_db
-        when:
-        !params.skip_download_centrifuge_db
-        script:
-        """
-        echo ${db}
-        wget ${db}
-        tar -xvf nt_2018_3_3.tar.gz
-        """
-}
-
-process centrifuge {
-        cpus "${params.centrifuge_threads}"
-        tag "${sample}"
-        label "cpu"
-        label "very_high_memory"
-        publishDir "$params.outdir/$sample/6_centrifuge",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
-        publishDir "$params.outdir/$sample/6_centrifuge",  mode: 'copy', pattern: "*species_report.tsv", saveAs: { filename -> "${sample}_$filename" }
-        publishDir "$params.outdir/$sample/6_centrifuge",  mode: 'copy', pattern: "*centrifuge_report.tsv"
-        input:
-                tuple val(sample), path(fastq), path(db1), path(db2), path(db3), path(db4)
-        output:
-                path("*centrifuge_report.tsv"), emit: centrifuge_report
-                tuple val(sample), path("centrifuge_species_report.tsv"), emit: centrifuge_species_report
-                path("centrifuge.log")
-        when:
-        !params.skip_centrifuge
-        script:
-        """
-        centrifuge -x nt -U ${fastq} -S centrifuge_species_report.tsv --report-file centrifuge_report.tsv --threads ${params.centrifuge_threads}
-        mv centrifuge_report.tsv ${sample}_centrifuge_report.tsv
-        cp .command.log centrifuge.log
-        """
-}
-
-process summary_centrifuge {
-        publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*tsv'
-        input:
-                path(centrifuge_files)
-        output:
-                tuple path("6_ONT_centrifuge_most_abundant_species.tsv"), path("6_ONT_centrifuge_pasteurella_multocida_species_abundance.tsv"), emit: centrifuge_summary
-        when:
-        !params.skip_centrifuge
-        script:
-        """
-        echo -e sampleID\\\tname\\\ttaxID\\\ttaxRank\\\tgenomeSize\\\tnumReads\\\tnumUniqueReads\\\tabundance > header_centrifuge
-        for file in `ls *_centrifuge_report.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_centrifuge_report.tsv}; grep -v abund \$file | sort -t\$'\t' -k7gr | head -1 | sed s/^/\${sample}\\\t/  >> 6_centrifuge_most_abundant_species.tsv.tmp; done
-        cat header_centrifuge 6_centrifuge_most_abundant_species.tsv.tmp > 6_ONT_centrifuge_most_abundant_species.tsv
-        for file in `ls *_centrifuge_report.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_centrifuge_report.tsv}; grep multocida \$file | grep "species"| grep -v subspecies | sed s/^/\${sample}\\\t/  >> 6_centrifuge_pasteurella_multocida_species_abundance.tsv.tmp; done
-        cat header_centrifuge 6_centrifuge_pasteurella_multocida_species_abundance.tsv.tmp > 6_ONT_centrifuge_pasteurella_multocida_species_abundance.tsv
-        """
-}
 
 process kaptive3 {
         cpus "${params.threads}"
@@ -839,18 +779,6 @@ workflow {
 
                 sylph_summary_per_sample(sylph_tax_results).map{sample, summary_file -> summary_file }.collect().set{all_sylph_summaries}
                 summary_sylph(all_sylph_summaries)
-        }
-        if (!params.skip_centrifuge) {
-                if (!params.skip_download_centrifuge_db) {
-                        ch_centrifuge_db=Channel.value( "${params.centrifuge_db_download_file}")
-                        centrifuge_download_db(ch_centrifuge_db)
-                        centrifuge(ch_samplesheet_ONT.combine(centrifuge_download_db.out.centrifuge_db))
-                } else if (params.skip_download_centrifuge_db) {        
-                        ch_centrifuge_db=Channel.fromPath("${params.centrifuge_db}" ).collect()
-                        ch_centrifuge_db.view()
-                        centrifuge(ch_samplesheet_ONT.combine(ch_centrifuge_db))
-                }
-                summary_centrifuge(centrifuge.out.centrifuge_report.collect())
         }
         if (!params.skip_kaptive3) {
                 if (!params.skip_polishing) {
