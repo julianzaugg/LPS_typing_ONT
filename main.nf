@@ -394,10 +394,10 @@ process kaptive3 {
         mv kaptive_results.tsv ${sample}_kaptive_results.tsv
         if [[ -f flye_polished_kaptive_results.fna ]]; then
                 sed s/flye_polished/${sample}/ flye_polished_kaptive_results.fna > ${sample}_flye_polished_kaptive_results.fna
+                rm flye_polished_kaptive_results.fna
         else
                 touch ${sample}_flye_polished_kaptive_results.fna
         fi
-        rm flye_polished_kaptive_results.fna
         cp .command.log kaptive_v3.log
         """
 }
