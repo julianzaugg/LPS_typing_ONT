@@ -439,8 +439,8 @@ process minimap {
         locus=`tail -1 ${kaptive_report} | cut -f3`
 
         ref_fasta=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f3`
-        ref_fasta=${params.reference_LPS_directory}/\$ref_fasta"
-        minimap2 -t !{params.minimap_threads} -ax map-ont -k19 -w 19 -U50,500 -g10k \$ref_fasta ${fastq} > minimap2.sam
+        ref_fasta=${params.reference_LPS_directory}/\$ref_fasta
+        minimap2 -t ${params.minimap_threads} -ax map-ont -k19 -w 19 -U50,500 -g10k \$ref_fasta ${fastq} > minimap2.sam
         samtools sort -o minimap2.bam -@ ${params.minimap_threads} minimap2.sam
         samtools index minimap2.bam
         samtools flagstat minimap2.bam > minimap2_flagstat.txt
