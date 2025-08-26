@@ -371,7 +371,6 @@ process summary_sylph {
         """
 }
 
-
 process kaptive3 {
         cpus "${params.threads}"
         tag "${sample}"
@@ -435,7 +434,7 @@ process minimap {
         when:
         !params.skip_clair3
         script:
-        '''
+        """
         locus=`tail -1 ${kaptive_report} | cut -f3`
 
         ref_fasta=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f3`
@@ -447,7 +446,7 @@ process minimap {
         samtools view -b -F 4 minimap2.bam > minimap2_mapped.bam
         samtools index minimap2_mapped.bam
         cp .command.log minimap.log
-        '''
+        """
 }
 
 process clair3 {
@@ -464,7 +463,7 @@ process clair3 {
         when:
         !params.skip_clair3
         script:
-        '''
+        """
         locus=`tail -1 ${kaptive_report} | cut -f3`
         ref_gb=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f2`
         ref_fasta=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f3`
@@ -474,7 +473,7 @@ process clair3 {
         gunzip -c merge_output.vcf.gz > merge_output.vcf
         mv merge_output.vcf clair3.vcf
         cp .command.log clair3.log
-        '''
+        """
 }
 
 process snpeff {
@@ -491,7 +490,7 @@ process snpeff {
         when:
         !params.skip_clair3 || !params.skip_snpeff
         script:
-        '''
+        """
         locus=`tail -1 ${kaptive_report} | cut -f3`
         ref_gb=`grep ${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f2`
         ref_gb=${params.reference_LPS_directory}/\$ref_gb
@@ -507,7 +506,7 @@ process snpeff {
         snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb ${vcf} > clair3.snpeff.vcf
         mv clair3.snpeff.vcf ${sample}_clair3.snpeff.vcf
         cp .command.log snpeff.log
-        '''
+        """
 }
 
 process snpsift {
