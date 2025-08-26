@@ -470,15 +470,20 @@ process clair3 {
         !params.skip_clair3
         script:
         """
-        locus=\$(tail -1 "${kaptive_report}" | cut -f3)
-        ref_gb=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
-        ref_fasta=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f3)
-        ref_gb="${params.reference_LPS_directory}/\$ref_gb"
-        ref_fasta="${params.reference_LPS_directory}/\$ref_fasta"
-        run_clair3.sh --bam_fn=${bam} --ref_fn=\$ref_fasta --threads=${params.clair3_threads} --platform="ont" --model_path=${params.clair3_model} --sample_name=${sample} --output=\$PWD ${params.clair3_args} --no_phasing_for_fa --include_all_ctgs --enable_long_indel
-        gunzip -c merge_output.vcf.gz > merge_output.vcf
-        mv merge_output.vcf clair3.vcf
-        cp .command.log clair3.log
+        if [ \$(wc -l < "${kaptive_report}") -le 1 ]; then
+                echo "Warning: kaptive_report has only a header for sample ${sample}" > clair3.log
+                touch clair3.vcf
+        else
+                locus=\$(tail -1 "${kaptive_report}" | cut -f3)
+                ref_gb=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
+                ref_fasta=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f3)
+                ref_gb="${params.reference_LPS_directory}/\$ref_gb"
+                ref_fasta="${params.reference_LPS_directory}/\$ref_fasta"
+                run_clair3.sh --bam_fn=${bam} --ref_fn=\$ref_fasta --threads=${params.clair3_threads} --platform="ont" --model_path=${params.clair3_model} --sample_name=${sample} --output=\$PWD ${params.clair3_args} --no_phasing_for_fa --include_all_ctgs --enable_long_indel
+                gunzip -c merge_output.vcf.gz > merge_output.vcf
+                mv merge_output.vcf clair3.vcf
+                cp .command.log clair3.log
+        fi
         """
 }
 
@@ -497,21 +502,26 @@ process snpeff {
         !params.skip_clair3 || !params.skip_snpeff
         script:
         """
-        locus=\$(tail -1 "${kaptive_report}" | cut -f3)
-        ref_gb=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
-        ref_gb="${params.reference_LPS_directory}/\$ref_gb"
-        mkdir -p LPS_snpeffdb
-        mkdir -p snpeff_output/LPS_snpeffdb
-        mkdir -p data/LPS_snpeffdb
-        cp \${ref_gb} snpeff_output/LPS_snpeffdb/genes.gbk
-        snpEff build -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output LPS_snpeffdb
-        mv snpeff_output/'LPS_snpeffdb'/*.bin data/'LPS_snpeffdb'
-        cp /usr/local/share/snpeff-4.3-2/snpEff.config snpEff.config
-        echo 'LPS_snpeffdb.genome : LPS_snpeffdb' >> snpEff.config
-        echo 'LPS_snpeffdb.codonTable : Bacterial_and_Plant_Plastid' >> snpEff.config
-        snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb ${vcf} > clair3.snpeff.vcf
-        mv clair3.snpeff.vcf ${sample}_clair3.snpeff.vcf
-        cp .command.log snpeff.log
+        if [ \$(wc -l < "${kaptive_report}") -le 1 ]; then
+                echo "Warning: kaptive_report has only a header for sample ${sample}" > snpeff.log
+                touch ${sample}_clair3.snpeff.vcf
+        else
+                locus=\$(tail -1 "${kaptive_report}" | cut -f3)
+                ref_gb=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
+                ref_gb="${params.reference_LPS_directory}/\$ref_gb"
+                mkdir -p LPS_snpeffdb
+                mkdir -p snpeff_output/LPS_snpeffdb
+                mkdir -p data/LPS_snpeffdb
+                cp \${ref_gb} snpeff_output/LPS_snpeffdb/genes.gbk
+                snpEff build -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output LPS_snpeffdb
+                mv snpeff_output/'LPS_snpeffdb'/*.bin data/'LPS_snpeffdb'
+                cp /usr/local/share/snpeff-4.3-2/snpEff.config snpEff.config
+                echo 'LPS_snpeffdb.genome : LPS_snpeffdb' >> snpEff.config
+                echo 'LPS_snpeffdb.codonTable : Bacterial_and_Plant_Plastid' >> snpEff.config
+                snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb ${vcf} > clair3.snpeff.vcf
+                mv clair3.snpeff.vcf ${sample}_clair3.snpeff.vcf
+                cp .command.log snpeff.log
+        fi
         """
 }
 
