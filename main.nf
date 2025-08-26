@@ -392,7 +392,11 @@ process kaptive3 {
         """
         kaptive assembly ${params.kaptive_db_9lps} ${assembly} -f \$PWD -o kaptive_results.tsv
         mv kaptive_results.tsv ${sample}_kaptive_results.tsv
-        sed s/flye_polished/${sample}/ flye_polished_kaptive_results.fna > ${sample}_flye_polished_kaptive_results.fna
+        if [[ -f flye_polished_kaptive_results.fna ]]; then
+                sed s/flye_polished/${sample}/ flye_polished_kaptive_results.fna > ${sample}_flye_polished_kaptive_results.fna
+        else
+                touch ${sample}_flye_polished_kaptive_results.fna
+        fi
         rm flye_polished_kaptive_results.fna
         cp .command.log kaptive_v3.log
         """
