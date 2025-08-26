@@ -492,12 +492,12 @@ process snpeff {
         script:
         """
         locus=`tail -1 ${kaptive_report} | cut -f3`
-        ref_gb=`grep ${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f2`
+        ref_gb=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f2`
         ref_gb=${params.reference_LPS_directory}/\$ref_gb
         mkdir -p LPS_snpeffdb
         mkdir -p snpeff_output/LPS_snpeffdb
         mkdir -p data/LPS_snpeffdb
-        cp $ref_gb snpeff_output/LPS_snpeffdb/genes.gbk
+        cp \${ref_gb} snpeff_output/LPS_snpeffdb/genes.gbk
         snpEff build -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output LPS_snpeffdb
         mv snpeff_output/'LPS_snpeffdb'/*.bin data/'LPS_snpeffdb'
         cp /usr/local/share/snpeff-4.3-2/snpEff.config snpEff.config
