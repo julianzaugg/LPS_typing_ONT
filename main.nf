@@ -435,17 +435,23 @@ process minimap {
         !params.skip_clair3
         script:
         """
-        locus=\$(tail -1 "${kaptive_report}" | cut -f3)
-        ref_fasta=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f3)
-        ref_fasta="${params.reference_LPS_directory}/\$ref_fasta"
 
-        minimap2 -t ${params.minimap_threads} -ax map-ont -k19 -w 19 -U50,500 -g10k \$ref_fasta ${fastq} > minimap2.sam
-        samtools sort -o minimap2.bam -@ ${params.minimap_threads} minimap2.sam
-        samtools index minimap2.bam
-        samtools flagstat minimap2.bam > minimap2_flagstat.txt
-        samtools view -b -F 4 minimap2.bam > minimap2_mapped.bam
-        samtools index minimap2_mapped.bam
-        cp .command.log minimap.log
+        if [ \$(wc -l < "${kaptive_report}") -le 1 ]; then
+                echo "Warning: kaptive_report has only a header for sample ${sample}" > minimap.log
+                touch minimap2_mapped.bam minimap2_mapped.bam.bai minimap2_flagstat.txt
+        else
+                locus=\$(tail -1 "${kaptive_report}" | cut -f3)
+                ref_fasta=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f3)
+                ref_fasta="${params.reference_LPS_directory}/\$ref_fasta"
+
+                minimap2 -t ${params.minimap_threads} -ax map-ont -k19 -w 19 -U50,500 -g10k \$ref_fasta ${fastq} > minimap2.sam
+                samtools sort -o minimap2.bam -@ ${params.minimap_threads} minimap2.sam
+                samtools index minimap2.bam
+                samtools flagstat minimap2.bam > minimap2_flagstat.txt
+                samtools view -b -F 4 minimap2.bam > minimap2_mapped.bam
+                samtools index minimap2_mapped.bam
+                cp .command.log minimap.log
+        fi
         """
 }
 
