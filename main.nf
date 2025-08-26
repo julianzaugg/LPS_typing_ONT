@@ -435,10 +435,10 @@ process minimap {
         !params.skip_clair3
         script:
         """
-        locus=`tail -1 ${kaptive_report} | cut -f3`
+        locus=\$(tail -1 "${kaptive_report}" | cut -f3)
+        ref_fasta=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f3)
+        ref_fasta="${params.reference_LPS_directory}/\$ref_fasta"
 
-        ref_fasta=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f3`
-        ref_fasta=${params.reference_LPS_directory}/\$ref_fasta
         minimap2 -t ${params.minimap_threads} -ax map-ont -k19 -w 19 -U50,500 -g10k \$ref_fasta ${fastq} > minimap2.sam
         samtools sort -o minimap2.bam -@ ${params.minimap_threads} minimap2.sam
         samtools index minimap2.bam
@@ -464,12 +464,12 @@ process clair3 {
         !params.skip_clair3
         script:
         """
-        locus=`tail -1 ${kaptive_report} | cut -f3`
-        ref_gb=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f2`
-        ref_fasta=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f3`
-        ref_gb=${params.reference_LPS_directory}/\$ref_gb
-        ref_fasta=${params.reference_LPS_directory}}/\${ref_fasta}
-        run_clair3.sh --bam_fn=!{bam} --ref_fn=\$ref_fasta --threads=${params.clair3_threads} --platform="ont" --model_path=${params.clair3_model} --sample_name=${sample} --output=\$PWD ${params.clair3_args} --no_phasing_for_fa --include_all_ctgs --enable_long_indel
+        locus=\$(tail -1 "${kaptive_report}" | cut -f3)
+        ref_gb=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
+        ref_fasta=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f3)
+        ref_gb="${params.reference_LPS_directory}/\$ref_gb"
+        ref_fasta="${params.reference_LPS_directory}/\$ref_fasta"
+        run_clair3.sh --bam_fn=${bam} --ref_fn=\$ref_fasta --threads=${params.clair3_threads} --platform="ont" --model_path=${params.clair3_model} --sample_name=${sample} --output=\$PWD ${params.clair3_args} --no_phasing_for_fa --include_all_ctgs --enable_long_indel
         gunzip -c merge_output.vcf.gz > merge_output.vcf
         mv merge_output.vcf clair3.vcf
         cp .command.log clair3.log
@@ -491,9 +491,9 @@ process snpeff {
         !params.skip_clair3 || !params.skip_snpeff
         script:
         """
-        locus=`tail -1 ${kaptive_report} | cut -f3`
-        ref_gb=`grep \${locus:0:2} ${params.reference_LPS_directory}/reference_LPS.txt | cut -f2`
-        ref_gb=${params.reference_LPS_directory}/\$ref_gb
+        locus=\$(tail -1 "${kaptive_report}" | cut -f3)
+        ref_gb=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
+        ref_gb="${params.reference_LPS_directory}/\$ref_gb"
         mkdir -p LPS_snpeffdb
         mkdir -p snpeff_output/LPS_snpeffdb
         mkdir -p data/LPS_snpeffdb
