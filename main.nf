@@ -571,7 +571,7 @@ process report {
                                         echo \$sample"\t"\$db_LPStype"\t"\$db_subtype"\t"\$db_type"\t"\$db_isolate"\t"\$db_chrom"\t"\$db_pos"\t"\$db_ref"\t"\$db_alt"\t"\$db_gene >> 10_ONT_subtype_report.tsv.tmp
                                 fi
                         fi
-                done < !{params.reference_LPS_directory}/LPS_subtype_database_v1.txt
+                done < ${params.reference_LPS_directory}/LPS_subtype_database_v1.txt
         done < 8_ONT_clair3_snpeff.vcf
         awk -F'\t' 'NR > 1 {split(\$2, a, "-"); gsub("LPS", "L", a[1]); print \$1 "\t" a[1]}' "${kaptive_summary}" > kaptive_tmp
         cut -f1 10_ONT_subtype_report.tsv.tmp | grep -v SAMPLE | sort | uniq > list_samples_clair_exclude
