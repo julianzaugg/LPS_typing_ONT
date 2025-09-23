@@ -515,7 +515,8 @@ process snpeff {
                 cp \${ref_gb} snpeff_output/LPS_snpeffdb/genes.gbk
                 snpEff build -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output LPS_snpeffdb
                 mv snpeff_output/'LPS_snpeffdb'/*.bin data/'LPS_snpeffdb'
-                cp /usr/local/share/snpeff-4.3-2/snpEff.config snpEff.config
+                config_path=\$(find /usr/local/share/ -name "snpEff.config")
+                cp \$config_path snpEff.config
                 echo 'LPS_snpeffdb.genome : LPS_snpeffdb' >> snpEff.config
                 echo 'LPS_snpeffdb.codonTable : Bacterial_and_Plant_Plastid' >> snpEff.config
                 snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb ${vcf} > clair3.snpeff.vcf
