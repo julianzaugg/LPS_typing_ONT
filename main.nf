@@ -75,8 +75,8 @@ process flye {
         input:
                 tuple val(sample), path(fastq)
         output:
-                tuple val(sample), path(fastq), path("assembly.fasta"), emit: assembly_fasta
-                tuple val(sample), path("assembly.fasta"), emit: assembly_only
+                tuple val(sample), path(fastq), path("${sample}_assembly.fasta"), emit: assembly_fasta
+                tuple val(sample), path("${sample}_assembly.fasta"), emit: assembly_only
                 tuple val(sample), path("*assembly_info.txt"), path("assembly_graph.gfa"),path("assembly_graph.gv"), emit: assembly_graph
                 path("*assembly_info.txt"), emit: assembly_info 
                 path("flye.log")
@@ -86,15 +86,11 @@ process flye {
         script:
         """
         flye --nano-hq ${fastq} --threads ${params.flye_threads} --out-dir \$PWD !{params.flye_args} --genome-size ${params.genome_size}
-        if [ -f "assembly.fasta" ]; then
-                mv assembly.fasta assembly.fasta
-                mv assembly_info.txt assembly_info.txt
-                mv assembly_graph.gfa assembly_graph.gfa
-                mv assembly_graph.gv assembly_graph.gv
-        else
+        if [ ! -f "assembly.fasta" ]; then
                 touch assembly.fasta assembly_info.txt assembly_graph.gfa assembly_graph.gv
         fi
         mv assembly_info.txt ${sample}_assembly_info.txt
+        mv assembly.fasta ${sample}_assembly.fasta
         flye -v 2> flye_version.txt
         cp .command.log flye.log
         """  
@@ -111,7 +107,7 @@ process medaka {
         input:
                 tuple val(sample), path(fastq), path(draft)
         output:
-                tuple val(sample), path ("flye_polished.fasta"), emit: polished_medaka
+                tuple val(sample), path ("${sample}_flye_polished.fasta"), emit: polished_medaka
         path("medaka.log")
         path("medaka_version.txt")
         when:
@@ -122,9 +118,9 @@ process medaka {
         medaka_consensus -i ${fastq} -d ${draft} -o \$PWD -t ${params.medaka_threads} -m ${params.medaka_model}
         rm consensus_probs.hdf calls_to_draft.bam calls_to_draft.bam.bai
         if [ -f "consensus.fasta" ]; then
-                mv consensus.fasta flye_polished.fasta
+                mv consensus.fasta ${sample}_flye_polished.fasta
         else
-                touch flye_polished.fasta
+                touch ${sample}_flye_polished.fasta
         fi
         cp .command.log medaka.log
         medaka --version > medaka_version.txt
@@ -147,7 +143,7 @@ process quast {
         script:
         """
         quast.py ${assembly} --threads ${params.threads} -o \$PWD
-        sed "s/flye_polished/${sample}/" report.tsv > ${sample}_report.tsv
+        sed "s/_flye_polished//;s/_assembly//" report.tsv > ${sample}_report.tsv
         rm transposed_report.tsv report.tsv
         cp .command.log quast.log
         """
@@ -241,7 +237,8 @@ process summary_checkm {
         script:
         """
         echo -e  sampleID\\\tMarker_lineage\\\tNbGenomes\\\tNbMarkers\\\tNbMarkerSets\\\t0\\\t1\\\t2\\\t3\\\t4\\\t5+\\\tCompleteness\\\tContamination\\\tStrain_heterogeneity > header_checkm
-        for file in `ls *checkm_lineage_wf_results.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_checkm_lineage_wf_results.tsv}; grep -v Bin \$file | sed s/^flye_polished/\${sample}/ >> 5_checkm_lineage_wf_results.tsv.tmp; done
+        for file in `ls *checkm_lineage_wf_results.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_checkm_lineage_wf_results.tsv}; grep -v Bin \$file | \
+        sed "s/^flye_polished/\${sample}/;s/_flye_polished//;s/^assembly/\${sample};s/_assembly//" >> 5_checkm_lineage_wf_results.tsv.tmp; done
         cat header_checkm 5_checkm_lineage_wf_results.tsv.tmp > 5_ONT_checkm_lineage_wf_results.tsv
         """
 }
@@ -384,13 +381,11 @@ process kaptive3 {
         !params.skip_kaptive3
         script:
         """
-        kaptive assembly ${params.kaptive_db_9lps} ${assembly} -f \$PWD -o kaptive_results.tsv
-        mv kaptive_results.tsv ${sample}_kaptive_results.tsv
-        if [[ -f flye_polished_kaptive_results.fna ]]; then
-                sed s/flye_polished/${sample}/ flye_polished_kaptive_results.fna > ${sample}_flye_polished_kaptive_results.fna
-                rm flye_polished_kaptive_results.fna
+        kaptive assembly ${params.kaptive_db_9lps} ${assembly} -f \$PWD/${sample}_kaptive_results.fna -o ${sample}_kaptive_results.tsv
+        if [[ -f ${sample}_kaptive_results.fna ]]; then
+                sed -i "s/_flye_polished//;s/_assembly//" \$PWD/${sample}_kaptive_results.fna
         else
-                touch ${sample}_flye_polished_kaptive_results.fna
+                touch ${sample}_kaptive_results.fna
         fi
         cp .command.log kaptive_v3.log
         """
@@ -407,7 +402,10 @@ process summary_kaptive {
         script:
         """
         echo -e sampleID\\\tBest match locus\\\tBest match type\\\tMatch confidence\\\tProblems\\\tIdentity\\\tCoverage\\\tLength discrepancy\\\tExpected genes in locus\\\tExpected genes in locus, details\\\tMissing expected genes\\\tOther genes in locus\\\tOther genes in locus, details\\\tExpected genes outside locus\\\tExpected genes outside locus, details\\\tOther genes outside locus\\\tOther genes outside locus, details\\\tTruncated genes, details\\\tExtra genes, details >  header_kaptive3
-        for file in `ls *_kaptive_results.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_kaptive_results.tsv}; grep -v Assembly \$file | sed s/^flye_polished/\${sample}/  >> 7_kaptive_results.tsv.tmp; done
+        for file in `ls *_kaptive_results.tsv`; do
+        fileName=\$(basename \$file)
+        sample=\${fileName%%_kaptive_results.tsv}
+        grep -v Assembly \$file | sed "s/^flye_polished/\${sample}/;s/^assembly/${sample}/;s/_flye_polished//;s/_assembly//"  >> 7_kaptive_results.tsv.tmp; done
         cat header_kaptive3 7_kaptive_results.tsv.tmp > 7_ONT_kaptive_results.tsv
         """
 }
