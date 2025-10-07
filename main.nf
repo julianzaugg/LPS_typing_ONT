@@ -63,10 +63,6 @@ process nanocomp {
         """
 }
 
-prefix="assembly"
-prefix_lr="assembly_polished"
-medakav="medaka"
-
 process flye {
         cpus "${params.flye_threads}"
         tag "${sample}"
@@ -87,10 +83,9 @@ process flye {
                 path("flye_version.txt")
         when:
         !params.skip_assembly
-        shell:
-        '''
-        set +eu
-        flye --nano-hq !{fastq} --threads !{params.flye_threads} --out-dir \$PWD !{params.flye_args} --genome-size !{params.genome_size}
+        script:
+        """
+        flye --nano-hq ${fastq} --threads ${params.flye_threads} --out-dir \$PWD !{params.flye_args} --genome-size ${params.genome_size}
         if [ -f "assembly.fasta" ]; then
                 mv assembly.fasta assembly.fasta
                 mv assembly_info.txt assembly_info.txt
@@ -99,10 +94,10 @@ process flye {
         else
                 touch assembly.fasta assembly_info.txt assembly_graph.gfa assembly_graph.gv
         fi
-        mv assembly_info.txt !{sample}_assembly_info.txt
+        mv assembly_info.txt ${sample}_assembly_info.txt
         flye -v 2> flye_version.txt
         cp .command.log flye.log
-        '''  
+        """  
 }
 
 process medaka {
@@ -522,7 +517,6 @@ process snpeff {
                 
                 # Ensure chromosome name in VCF matches that in the SnpEff DB
                 current_chromosome_name=\$(grep -v '^#' "${vcf}" | head -n 1 | awk '{print \$1}')
-                snpEff dump -v LPS_snpeffdb > snpEff_dump
                 snpEff dump LPS_snpeffdb 2>/dev/null | grep "Bacterial_and_Plant_Plastid" awk -F "'" '{print \$2}' > new_name.txt
                 new_chromosome_name=\$(cat new_name.txt)
                 sed "s/\$current_chromosome_name/\$new_chromosome_name/g" ${vcf} > clair3_name_modified.vcf
