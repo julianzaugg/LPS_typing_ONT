@@ -507,7 +507,7 @@ process snpeff {
                 touch ${sample}_clair3.snpeff.vcf
         else
                 locus=\$(tail -1 "${kaptive_report}" | cut -f3)
-                ref_gb=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
+                ref_gb=\$(grep "\${locus:0:2}" "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f2)
                 ref_gb="${params.reference_LPS_directory}/\$ref_gb"
                 # mkdir -p LPS_snpeffdb
                 mkdir -p snpeff_output/LPS_snpeffdb
@@ -521,14 +521,15 @@ process snpeff {
                 echo 'LPS_snpeffdb.codonTable : Bacterial_and_Plant_Plastid' >> snpEff.config
                 
                 # Ensure chromosome name in VCF matches that in the SnpEff DB
-                current_chromosome_name=\$(awk '{print \$1}' ${vcf} | tail -n -1)
+                current_chromosome_name=\$(grep -v '^#' "${vcf}" | head -n 1 | awk '{print \$1}')
                 snpEff dump -v LPS_snpeffdb > snpEff_dump
-                new_chromosome_name=\$(grep "Bacterial_and_Plant_Plastid" awk -F "'" '{print \$2}' snpEff_dump)
+                snpEff dump LPS_snpeffdb 2>/dev/null | grep "Bacterial_and_Plant_Plastid" awk -F "'" '{print \$2}' > new_name.txt
+                new_chromosome_name=\$(cat new_name.txt)
                 sed "s/\$current_chromosome_name/\$new_chromosome_name/g" ${vcf} > clair3_name_modified.vcf
                 snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb clair3_name_modified.vcf > clair3.snpeff.vcf
                 # Change chromosome name back
-                sed -i "s/\$new_chromosome_name/\$current_chromosome_name/g" clair3_name_modified.vcf
-                mv clair3_name_modified.vcf ${sample}_clair3.snpeff.vcf
+                sed -i "s/\$new_chromosome_name/\$current_chromosome_name/g" clair3.snpeff.vcf
+                mv clair3.snpeff.vcf ${sample}_clair3.snpeff.vcf
                 cp .command.log snpeff.log
         fi
         """
