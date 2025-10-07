@@ -517,7 +517,7 @@ process snpeff {
                 
                 # Ensure chromosome name in VCF matches that in the SnpEff DB
                 current_chromosome_name=\$(grep -v '^#' "${vcf}" | head -n 1 | awk '{print \$1}')
-                snpEff dump LPS_snpeffdb 2>/dev/null | grep "Bacterial_and_Plant_Plastid" awk -F "'" '{print \$2}' > new_name.txt
+                snpEff dump LPS_snpeffdb 2>/dev/null | grep "Bacterial_and_Plant_Plastid" | awk -F "'" '{print \$2}' > new_name.txt
                 new_chromosome_name=\$(cat new_name.txt)
                 sed "s/\$current_chromosome_name/\$new_chromosome_name/g" ${vcf} > clair3_name_modified.vcf
                 snpEff eff -i vcf -o vcf -c snpEff.config -lof -nodownload -no-downstream -no-intron -no-upstream -no-utr -no-intergenic -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -stats snpeff.html LPS_snpeffdb clair3_name_modified.vcf > clair3.snpeff.vcf
