@@ -85,7 +85,7 @@ process flye {
         !params.skip_assembly
         script:
         """
-        flye --nano-hq ${fastq} --threads ${params.flye_threads} --out-dir \$PWD !{params.flye_args} --genome-size ${params.genome_size}
+        flye --nano-hq ${fastq} --threads ${params.flye_threads} --out-dir \$PWD ${params.flye_args} --genome-size ${params.genome_size}
         if [ ! -f "assembly.fasta" ]; then
                 touch assembly.fasta assembly_info.txt assembly_graph.gfa assembly_graph.gv
         fi
@@ -405,7 +405,7 @@ process summary_kaptive {
         for file in `ls *_kaptive_results.tsv`; do
         fileName=\$(basename \$file)
         sample=\${fileName%%_kaptive_results.tsv}
-        grep -v Assembly \$file | sed "s/^flye_polished/\${sample}/;s/^assembly/${sample}/;s/_flye_polished//;s/_assembly//"  >> 7_kaptive_results.tsv.tmp; done
+        grep -v Assembly \$file | sed "s/^flye_polished/\${sample}/;s/^assembly/\${sample}/;s/_flye_polished//;s/_assembly//"  >> 7_kaptive_results.tsv.tmp; done
         cat header_kaptive3 7_kaptive_results.tsv.tmp > 7_ONT_kaptive_results.tsv
         """
 }
