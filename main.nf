@@ -238,7 +238,7 @@ process summary_checkm {
         """
         echo -e  sampleID\\\tMarker_lineage\\\tNbGenomes\\\tNbMarkers\\\tNbMarkerSets\\\t0\\\t1\\\t2\\\t3\\\t4\\\t5+\\\tCompleteness\\\tContamination\\\tStrain_heterogeneity > header_checkm
         for file in `ls *checkm_lineage_wf_results.tsv`; do fileName=\$(basename \$file); sample=\${fileName%%_checkm_lineage_wf_results.tsv}; grep -v Bin \$file | \
-        sed "s/^flye_polished/\${sample}/;s/_flye_polished//;s/^assembly/\${sample};s/_assembly//" >> 5_checkm_lineage_wf_results.tsv.tmp; done
+        sed "s/^flye_polished/\${sample}/;s/_flye_polished//;s/^assembly/\${sample}/;s/_assembly//" >> 5_checkm_lineage_wf_results.tsv.tmp; done
         cat header_checkm 5_checkm_lineage_wf_results.tsv.tmp > 5_ONT_checkm_lineage_wf_results.tsv
         """
 }
