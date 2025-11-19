@@ -384,6 +384,7 @@ process kaptive3 {
         kaptive assembly ${params.kaptive_db_9lps} ${assembly} -f \$PWD/${sample}_kaptive_results.fna -o ${sample}_kaptive_results.tsv
         if [[ -f ${sample}_kaptive_results.fna ]]; then
                 sed -i "s/_flye_polished//;s/_assembly//" \$PWD/${sample}_kaptive_results.fna
+                sed -i "s/_flye_polished//;s/_assembly//" \$PWD/${sample}_kaptive_results.tsv
         else
                 touch ${sample}_kaptive_results.fna
         fi
