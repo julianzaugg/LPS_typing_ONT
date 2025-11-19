@@ -506,6 +506,9 @@ process snpeff {
                 mkdir -p snpeff_output/LPS_snpeffdb
                 mkdir -p data/LPS_snpeffdb
                 cp \${ref_gb} snpeff_output/LPS_snpeffdb/genes.gbk
+                # Note: The placeholder genome name used here "LPS_snpeffdb" will be different to that in the GB file. 
+                # There will cause a warning "WARNING_REF_DOES_NOT_MATCH_GENOME" to appear in the snpEff output.
+                # This can be ignored as the genome will be correct.
                 snpEff build -v -configOption 'LPS_snpeffdb'.genome='LPS_snpeffdb' -configOption 'LPS_snpeffdb'.codonTable='Bacterial_and_Plant_Plastid' -genbank -dataDir \$PWD/snpeff_output LPS_snpeffdb
                 mv snpeff_output/'LPS_snpeffdb'/*.bin data/'LPS_snpeffdb'
                 config_path=\$(find /usr/local/share/ -name "snpEff.config")
