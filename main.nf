@@ -472,8 +472,10 @@ process clair3 {
                 ref_fasta=\$(grep \${locus:0:2} "${params.reference_LPS_directory}/reference_LPS.txt" | cut -f3)
                 ref_gb="${params.reference_LPS_directory}/\$ref_gb"
                 ref_fasta="${params.reference_LPS_directory}/\$ref_fasta"
-                run_clair3.sh --bam_fn=${bam} --ref_fn=\$ref_fasta --threads=${params.clair3_threads} --platform="ont" --model_path=${params.clair3_model} --sample_name=${sample} --output=\$PWD ${params.clair3_args} --no_phasing_for_fa --include_all_ctgs --enable_long_indel
+                # TODO run clair3 in full alignment (default) and --pileup_only modes, extract high impact mutations missing (or low qual) from full alignment mode and merge in.
+                run_clair3.sh --bam_fn=${bam} --ref_fn=\$ref_fasta --threads=${params.clair3_threads} --platform="ont" --model_path=${params.clair3_model} --sample_name=${sample} --output=\$PWD ${params.clair3_args} --no_phasing_for_fa --include_all_ctgs --enable_long_indel --haploid_precise
                 gunzip -c merge_output.vcf.gz > merge_output.vcf
+                #gunzip -c pileup.vcf.gz > merge_output.vcf
                 mv merge_output.vcf clair3.vcf
                 cp .command.log clair3.log
         fi
