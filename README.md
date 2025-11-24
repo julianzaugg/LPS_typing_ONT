@@ -33,9 +33,9 @@ The software [QUAST](https://quast.sourceforge.net/quast.html) is used to comput
 
 The software [CheckM](https://github.com/Ecogenomics/CheckM) v1 (command [lineage_wf](https://github.com/Ecogenomics/CheckM/wiki/Workflows#lineage-specific-workflow)) is used to compute genome assembly completeness and contamination, based on the presence or absence of marker genes. 
 
-### 6. Centrifuge taxonomy classification
+### 6. Sylph taxonomy classification
 
-Nanopore reads are used as input to the taxonomy classifier [Centrifuge](https://ccb.jhu.edu/software/centrifuge/). The default database was downloaded from https://genome-idx.s3.amazonaws.com/centrifuge/nt_2018_3_3.tar.gz. 
+Nanopore reads are used as input to the taxonomy classifier [Sylph](https://sylph-docs.github.io). Both the GTDB R226 and RefSeq Fungi databases were downloaded from https://sylph-docs.github.io/pre%E2%80%90built-databases/. 
 
 ### 7. LPS typing using Kaptive
 
@@ -97,7 +97,7 @@ The main.nf script contains the pipeline code and is generally not user-modifiab
 
 This is the bash script used to launch the workflow on the HPC. The template slurm script provided can be used to launch the pipeline on UQ HPC Bunya and is available [here](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/nextflow.sh). This file should be modified by the user to provide the path to the samplesheet file, Nanopore data files etc (see section "Step by step user guide" below). 
 
-**2) Database files for Centrifuge, Kaptive, Minimap2, CheckM, Bakta, and AMRFinderPlus**
+**2) Database files for Sylph, Kaptive, Minimap2, CheckM, Bakta, and AMRFinderPlus**
 
 Copy the databases folder from the RDM to the cloned pipeline repository on the scratch space (named "dir" below):
 ```
@@ -192,12 +192,13 @@ Some parameters can be added to the command line in order to include or skip som
 * `--skip_checkm`: skip the CheckM step (default=false)
 * `--checkm_db`: path to the CheckM database folder (default="../../../databases/CheckM-1.2.2")
 
-6. Centrifuge taxonomy classification:
-* `--skip_centrifuge`: skip the Centrifuge classification step (default=false)
-* `--skip_download_centrifuge_db`: skip the Centrifuge database downloading step (default=true)
-* `--centrifuge_db_download_file`: link to the centrifuge database file to be downloaded (default= 'https://genome-idx.s3.amazonaws.com/centrifuge/nt_2018_3_3.tar.gz')
-* `--centrifuge_db`: (default= '../../../databases/centrifuge/nt.*.cff')
-* `--centrifuge_threads`: number of threads for Centrifuge classification step (default=6)
+6. Sylph taxonomy classification:
+* `--skip_sylph`: skip the Centrifuge classification step (default=false)
+* `--skip_download_sylph_db`: skip the Centrifuge database downloading step (default=true)
+* `--sylph_db_gtdb_file` and `sylph_db_fungal_file`: links to the Sylph GTDB and Fungi RefSeq database files to be downloaded (default= 'http://faust.compbio.cs.cmu.edu/sylph-stuff/gtdb-r226-c200-dbv1.syldb' and 'http://faust.compbio.cs.cmu.edu/sylph-stuff/fungi-refseq-2024-07-25-c200-v0.3.syldb')
+* `--sylph_tax_gtdb_metadata` and `sylph_tax_fungal_metadata`: links to the Sylph-tax metadata files to be downloaded (default= 'https://zenodo.org/records/15314244/files/gtdb_r226_metadata.tsv.gz' and 'https://zenodo.org/records/14320496/files/fungi_refseq_2024-07-25_metadata.tsv.gz'). These must be the correct metadata for the database files.
+* `--sylph_db`: (default= '../../../databases/sylph/*.syldb')
+* `--sylph_threads`: number of threads for Sylph classification step (default=6)
 
 7. LPS typing using Kaptive:
 * `--skip_kaptive3`: skip the Kaptive typing step (default=false). note: it will automatically skip the variant calling step.  
@@ -210,14 +211,14 @@ Some parameters can be added to the command line in order to include or skip som
 * `--clair3_model`: path to the clair3 model folder (default="../../../databases/clair3_models/r1041_e82_400bps_sup_v500")
 * `--clair3_args`: Clair3 optional parameters (default="--haploid_sensitive"), see [available parameters](https://github.com/HKU-BAL/Clair3?tab=readme-ov-file#options)
 * `--skip_snpeff`: skip the variant annotation step (default=false)
-* `--reference_LPS`: path to the file summarising the reference LPS sequence files (default="../../../databases/LPS/reference_LPS.txt")
+* `--reference_LPS_directory`: The directory containing the reference LPS sequence files (default="../../../databases/LPS")
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
 
 10. Report:
-* `--subtype_db`: path to the subtype database file (default="../../../databases/LPS/LPS_subtype_database_v1.txt")
+* `--subtype_db`: path to the subtype database file (default="../../../databases/LPS/LPS_subtype_database_v2.txt")
 
 11. Genome annotation using Bakta:
 * `--skip_bakta`: skip the genome annotation step (default=false)
@@ -244,9 +245,10 @@ Each sample folder will contain the following folders:
 * **3_assembly:** Flye assembly output files (.fasta, .gfa, .gv, .info.txt), see [details](https://github.com/fenderglass/Flye/blob/flye/docs/USAGE.md#-flye-output). The final polished asssembly fasta file is sample_id_flye_polished.fasta.
 * **4_quast:** QUAST output report file (sample_id_report.tsv).
 * **5_checkm:** CheckM output file (sample_id_checkm_lineage_wf_results.tsv).  
-* **6_centrifuge:**  Centrifuge taxonomy classification results for the Nanopore reads, see [details](https://ccb.jhu.edu/software/centrifuge/manual.shtml#centrifuge-classification-output)
-  * Centrifuge classification output: classification assignments for a read (sample_id_centrifuge_species_report.tsv)
-  * Centrifuge summary output: classification summary for each genome or taxonomic unit (sample_id_centrifuge_report.tsv)
+* **6_sylph:**  Sylph taxonomy classification results for the Nanopore reads, see [details](https://sylph-docs.github.io/Output-format/) and [more details](https://sylph-docs.github.io/sylph-tax-output-format/)
+  * Sylph list of genomes detected: sample_id_sylph_profile.tsv
+  * Sylph-tax individual sequence abundances combined: sample_id_merged_sequence_abundance.tsv
+  * Sylph-tax individual taxonomic abundances combined: sample_id_merged_taxonomic_abundance.tsv
 * **7_kaptive_v3:** Kaptive output files, see [details](https://kaptive.readthedocs.io/en/latest/Outputs.html)
     * LPS type results (sample_id_kaptive_results.tsv)
     * LPS sequence in fasta format (sample_id_flye_polished_kaptive_results.fna)
@@ -261,9 +263,8 @@ Each sample folder will contain the following folders:
     * Flye assembly statistics: assembly coverage, number of contigs, assembly size (3_ONT_flye_stats.tsv)  
     * QUAST combined report file (4_ONT_quast_report.tsv)  
     * Checkm results (5_ONT_checkm_lineage_wf_results.tsv)  
-    * Centrifuge taxonomy results:  
-        - Abundance of P. multocida reads: 6_ONT_centrifuge_pasteurella_multocida_species_abundance.tsv
-        - Information about the most abundant species identified: 6_ONT_centrifuge_most_abundant_species.tsv  
+    * Sylph taxonomy results:
+        - Abundance of P. multocida reads, and information on the most abundant species (if not P. multocida): 6_ONT_sylph_summary.tsv
     * Kaptive results (7_ONT_kaptive_results.tsv)  
     * Clair3 variants results:
         - all variants: 8_ONT_clair3_snpeff.vcf  
