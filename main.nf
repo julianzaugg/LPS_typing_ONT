@@ -554,6 +554,10 @@ process snpsift {
         script:
         """
         SnpSift filter "( EFF[*].IMPACT = 'HIGH' ) && (FILTER = 'PASS')" -f ${vcf} > clair3.snpeff.high_impact.vcf
+        
+        # Remove any non-VCF header lines (like JVM warnings)
+        sed -i -n '/^##fileformat/,\$p' clair3.snpeff.high_impact.vcf
+        
         mv clair3.snpeff.high_impact.vcf ${sample}_clair3.snpeff.high_impact.vcf
         cp .command.log snpsift.log
         """
