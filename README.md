@@ -190,14 +190,14 @@ Some parameters can be added to the command line in order to include or skip som
 
 5. Assembly quality assessment with CheckM:
 * `--skip_checkm`: skip the CheckM step (default=false)
-* `--checkm_db`: path to the CheckM database folder (default="../../../databases/CheckM-1.2.2")
+* `--checkm_db`: path to the CheckM database folder (default="../../../databases/checkm_data_2015_01_16")
 
 6. Sylph taxonomy classification:
 * `--skip_sylph`: skip the Centrifuge classification step (default=false)
 * `--skip_download_sylph_db`: skip the Centrifuge database downloading step (default=true)
 * `--sylph_db_gtdb_file` and `sylph_db_fungal_file`: links to the Sylph GTDB and Fungi RefSeq database files to be downloaded (default= 'http://faust.compbio.cs.cmu.edu/sylph-stuff/gtdb-r226-c200-dbv1.syldb' and 'http://faust.compbio.cs.cmu.edu/sylph-stuff/fungi-refseq-2024-07-25-c200-v0.3.syldb')
 * `--sylph_tax_gtdb_metadata` and `sylph_tax_fungal_metadata`: links to the Sylph-tax metadata files to be downloaded (default= 'https://zenodo.org/records/15314244/files/gtdb_r226_metadata.tsv.gz' and 'https://zenodo.org/records/14320496/files/fungi_refseq_2024-07-25_metadata.tsv.gz'). These must be the correct metadata for the database files.
-* `--sylph_db`: (default= '../../../databases/sylph/*.syldb')
+* `--sylph_db`: (default= "../../../databases/sylph/\*.syldb")
 * `--sylph_threads`: number of threads for Sylph classification step (default=6)
 
 7. LPS typing using Kaptive:
@@ -218,13 +218,13 @@ Some parameters can be added to the command line in order to include or skip som
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
 
 10. Report:
-* `--subtype_db`: path to the subtype database file (default="../../../databases/LPS/LPS_subtype_database_v2.txt")
+* `--reference_LPS_directory`: path to the subtype database directory (default="../../../databases/LPS")
 
 11. Genome annotation using Bakta:
 * `--skip_bakta`: skip the genome annotation step (default=false)
 * `--bakta_threads`: number of threads for the Bakta step (default=8)  
 * `--bakta_db`: path to the Bakta database files (default="../../../databases/bakta/db")
-* `--bakta_protein_ref`: path to the trusted protein sequences file for CDS annotation in fasta or GenBank format (CDS features) (default="../../../databases/LPS/NC_002663_LPS.gb")  
+* `--bakta_protein_ref`: path to the trusted protein sequences file for CDS annotation in fasta or GenBank format (CDS features) (default="../../../databases/LPS/L3_NC002663_LPS.gb")  
 * `--bakta_args`: Bakta optional parameters (default="")  
 
 12. AMR genes identification using AMRFinderPlus:
@@ -300,7 +300,7 @@ The default parameters are suited for Pasteurella multocida. The LPS typing and 
 
 Here are a list of things to check if an error occurs:  
 
-* read the error message in the log file
-* the samplesheet contains the correct header line (cf https://github.com/vmurigneu/LPS_typing_ONT?tab=readme-ov-file#step-by-step-user-guide)
-* the fastq files in my samplesheet are present in the fastq folder given in the nextflow.sh script (--fqdir).
-* the /databases folder is present in the cloned pipeline repository and not empty (cf https://github.com/vmurigneu/LPS_typing_ONT?tab=readme-ov-file#step-by-step-user-guide)
+* Read the error message in the log file
+* The samplesheet contains the correct header line (cf https://github.com/vmurigneu/LPS_typing_ONT?tab=readme-ov-file#step-by-step-user-guide)
+* The fastq files in my samplesheet are present in the fastq folder given in the nextflow.sh script (--fqdir).
+* The /databases folder is present in the cloned pipeline repository and not empty (cf https://github.com/vmurigneu/LPS_typing_ONT?tab=readme-ov-file#step-by-step-user-guide)
