@@ -291,7 +291,7 @@ Each sample folder will contain the following folders:
 
 ## Running the workflow in assembly mode for other organisms
 
-The default parameters are suited for Pasteurella multocida. The LPS typing and variant calling are specific to Pasteurella multocida. Here are the paraneters to use the workflow to assemble another species:  
+The default parameters are suited for Pasteurella multocida. The LPS typing and variant calling are specific to Pasteurella multocida. Here are the parameters to use the workflow to assemble another species:  
 * `--genome_size`: estimated genome size (default="2.3M")
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
 * `--skip_kaptive3`: skip the Kaptive typing step (default=false). note: it will automatically skip the variant calling step.
