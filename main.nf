@@ -69,8 +69,8 @@ process flye {
         label "high_memory" 
         label "cpu"
         publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
-        publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "assembly*", saveAs: { filename -> "${sample}_$filename" }
         publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*version.txt", saveAs: { filename -> "${sample}_$filename" }
+        publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "${sample}_assembly.fasta"
         publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*info.txt"
         input:
                 tuple val(sample), path(fastq)
