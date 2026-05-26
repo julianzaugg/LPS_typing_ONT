@@ -667,12 +667,12 @@ process report {
         cat header_clair3 8_clair3_snpeff.vcf.tmp > 8_ONT_clair3_snpeff.vcf
 
         echo -e "SAMPLE\\tPETG_PRESENT" > petg_lookup.tsv
-        find . -maxdepth 1 -name '*_petG_summary.tsv' -type f | sort | while read petg_file; do
+        find . -maxdepth 1 -name '*_petG_summary.tsv' | sort | while read petg_file; do
                 tail -n +2 "\$petg_file" >> petg_lookup.tsv
         done
 
         echo -e "SAMPLE\\tMLST" > mlst_lookup.tsv
-        find . -maxdepth 1 -name '*_mlst.csv' -type f | sort | while read mlst_file; do
+        find . -maxdepth 1 -name '*_mlst.csv' | sort | while read mlst_file; do
                 fileName=\$(basename "\$mlst_file")
                 sample=\${fileName%%_mlst.csv}
                 mlst_st=\$(awk -F',' 'NR == 1 {print \$3; exit}' "\$mlst_file")
