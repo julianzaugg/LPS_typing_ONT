@@ -58,6 +58,8 @@ The pipeline generates a subtype report file (10_ONT_subtype_report.tsv) summari
 - the variant must be identified at the same position in the reference sequence and
 - both the reference allele and the alternate allele must be matching their corresponding allele from the variant in the database.  
 
+If the subtype database includes `PHENOTYPE_DEFAULT` and `PHENOTYPE_MULTIPLE_SUBTYPES` columns after the `GENE` column, the report also assigns a phenotype for each subtype. Phenotype descriptions are added from `phenotype_lookup.tsv` when this file is present in the LPS reference database directory.
+
 ### 11. 	Genome annotation using Bakta
 
 The software [Bakta](https://github.com/oschwengers/bakta) is used to annotate the genome assemblies. The default database is v6.0 from 2025-02-24, https://zenodo.org/records/14916843.    
@@ -211,14 +213,14 @@ Some parameters can be added to the command line in order to include or skip som
 * `--clair3_model`: path to the clair3 model folder (default="../../../databases/clair3_models/r1041_e82_400bps_sup_v500")
 * `--clair3_args`: Clair3 optional parameters (default="--haploid_sensitive"), see [available parameters](https://github.com/HKU-BAL/Clair3?tab=readme-ov-file#options)
 * `--skip_snpeff`: skip the variant annotation step (default=false)
-* `--reference_LPS_directory`: The directory containing the reference LPS sequence files (default="../../../databases/LPS")
+* `--reference_LPS_directory`: The directory containing the reference LPS sequence files (default="../../../databases/LPS"). This directory should also contain `LPS_subtype_database_v2.txt`; if phenotype reporting is used, it should contain `phenotype_lookup.tsv`.
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
 
 10. Report:
-* `--reference_LPS_directory`: path to the subtype database directory (default="../../../databases/LPS")
+* `--reference_LPS_directory`: path to the subtype database directory (default="../../../databases/LPS"). This directory should contain `LPS_subtype_database_v2.txt` and, for phenotype descriptions, `phenotype_lookup.tsv`.
 
 11. Genome annotation using Bakta:
 * `--skip_bakta`: skip the genome annotation step (default=false)
@@ -281,6 +283,9 @@ Each sample folder will contain the following folders:
         - REF: reference allele sequence present in the LPS reference sequence  
         - ALT: alternate allele sequence identified in the sample  
         - GENE: gene containing the variant  
+        - PHENOTYPE: phenotype label assigned from the subtype database, if available
+        - PHENOTYPE_DESCRIPTION: phenotype description from phenotype_lookup.tsv, if available
+        - NOTE: note from the subtype database
     * AMRFinderPlus results (12_ONT_amrfinder.tsv) 
 * **11_bakta:** Bakta genome annotation output files. The output files are described [here](https://github.com/oschwengers/bakta?tab=readme-ov-file#output).
     * Annotations & sequences in (multi) GenBank format (sample_id_bakta.gbff)  
