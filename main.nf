@@ -563,12 +563,97 @@ process snpsift {
         """
 }
 
+process petg_blast {
+        cpus "${params.petg_threads}"
+        tag "${sample}"
+        label "cpu"
+        publishDir "$params.outdir/$sample/13_petG",  mode: 'copy', pattern: '*_petG_*'
+        publishDir "$params.outdir/$sample/13_petG",  mode: 'copy', pattern: 'petg_blast.log', saveAs: { filename -> "${sample}_$filename" }
+        input:
+                tuple val(sample), path(assembly), path(petg_reference)
+        output:
+                path("${sample}_petG_hits.fasta"), emit: petg_hits
+                path("${sample}_petG_summary.tsv"), emit: petg_summary
+                path("${sample}_petG_blast.tsv")
+                path("${sample}_petG_blast.filtered.tsv")
+                path("petg_blast.log")
+        when:
+        !params.skip_petg
+        script:
+        """
+        makeblastdb -in ${assembly} -dbtype nucl -parse_seqids -out assembly_db
+        blastn \\
+                -query ${petg_reference} \\
+                -db assembly_db \\
+                -outfmt "6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore" \\
+                -num_threads ${params.petg_threads} \\
+                -out ${sample}_petG_blast.tsv
+
+        awk -F '\\t' -v OFS='\\t' -v min_len="${params.petg_min_length}" -v min_ident="${params.petg_min_identity}" '
+        {
+                start = \$9
+                end = \$10
+                strand = "plus"
+                suffix = "+"
+                if (start > end) {
+                        start = \$10
+                        end = \$9
+                        strand = "minus"
+                        suffix = "-"
+                }
+                span = end - start + 1
+                if (\$3 >= min_ident && span > min_len) {
+                        print \$0, start, end, strand, suffix
+                }
+        }
+        ' ${sample}_petG_blast.tsv > ${sample}_petG_blast.filtered.tsv
+
+        touch ${sample}_petG_hits.fasta
+        echo -e "SAMPLE\\tPETG_PRESENT" > ${sample}_petG_summary.tsv
+        if [[ -s ${sample}_petG_blast.filtered.tsv ]]; then
+                while IFS=\$'\\t' read qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore hit_start hit_end strand suffix; do
+                        blastdbcmd -db assembly_db -entry "\$sseqid" -range "\${hit_start}-\${hit_end}" -strand "\$strand" | \\
+                        awk -v header=">${sample}|\${sseqid}:\${hit_start}-\${hit_end}\${suffix}" 'BEGIN { print header } /^>/ { next } { print }' >> ${sample}_petG_hits.fasta
+                done < ${sample}_petG_blast.filtered.tsv
+                echo -e "${sample}\\tyes" >> ${sample}_petG_summary.tsv
+        else
+                echo -e "${sample}\\t" >> ${sample}_petG_summary.tsv
+        fi
+
+        cp .command.log petg_blast.log
+        """
+}
+
+process empty_mlst_report_input {
+        output:
+                path("empty_mlst_report_input.txt"), emit: empty_mlst
+        when:
+        params.skip_mlst
+        script:
+        """
+        touch empty_mlst_report_input.txt
+        """
+}
+
+process empty_petg_report_input {
+        output:
+                path("empty_petg_report_input.txt"), emit: empty_petg
+        when:
+        params.skip_petg
+        script:
+        """
+        touch empty_petg_report_input.txt
+        """
+}
+
 process report {
         publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*vcf'
         publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*tsv'
         input:
                 path(clair3_files)
                 path(kaptive_summary)
+                path(petg_summaries)
+                path(mlst_files)
         output:
                 tuple path("8_ONT_clair3_snpeff.vcf"), path("8_ONT_clair3_snpeff_high_impact.vcf"), path("10_ONT_subtype_report.tsv"), emit: subtype_report
         when:
@@ -580,6 +665,20 @@ process report {
         cat header_clair3 8_clair3_snpeff_high_impact.vcf.tmp > 8_ONT_clair3_snpeff_high_impact.vcf
         for file in `ls *_clair3.snpeff.vcf`; do fileName=\$(basename \$file); sample=\${fileName%%_clair3.snpeff.vcf}; grep -v "^#" \$file | sed s/^/\${sample}\\\t/  >> 8_clair3_snpeff.vcf.tmp; done
         cat header_clair3 8_clair3_snpeff.vcf.tmp > 8_ONT_clair3_snpeff.vcf
+
+        echo -e "SAMPLE\\tPETG_PRESENT" > petg_lookup.tsv
+        find . -maxdepth 1 -name '*_petG_summary.tsv' -type f | sort | while read petg_file; do
+                tail -n +2 "\$petg_file" >> petg_lookup.tsv
+        done
+
+        echo -e "SAMPLE\\tMLST" > mlst_lookup.tsv
+        find . -maxdepth 1 -name '*_mlst.csv' -type f | sort | while read mlst_file; do
+                fileName=\$(basename "\$mlst_file")
+                sample=\${fileName%%_mlst.csv}
+                mlst_st=\$(awk -F',' 'NR == 1 {print \$3; exit}' "\$mlst_file")
+                echo -e "\${sample}\\t\${mlst_st}" >> mlst_lookup.tsv
+        done
+
         subtype_db="${params.reference_LPS_directory}/LPS_subtype_database_v2.txt"
         phenotype_lookup="${params.reference_LPS_directory}/phenotype_lookup.tsv"
         if [[ -f "\$phenotype_lookup" ]]; then
@@ -589,7 +688,7 @@ process report {
                 phenotype_lookup_input="phenotype_lookup_empty.tsv"
         fi
 
-        awk -F '\\t' -v OFS='\\t' -v subtype_db="\$subtype_db" -v phenotype_lookup="\$phenotype_lookup_input" '
+        awk -F '\\t' -v OFS='\\t' -v subtype_db="\$subtype_db" -v phenotype_lookup="\$phenotype_lookup_input" -v petg_lookup="petg_lookup.tsv" -v mlst_lookup="mlst_lookup.tsv" '
         function set_header_fields(    i) {
                 for (i = 1; i <= NF; i++) {
                         header[\$i] = i
@@ -661,6 +760,18 @@ process report {
                 }
                 next
         }
+        FILENAME == petg_lookup {
+                if (FNR > 1 && \$1 != "") {
+                        petg_present[\$1] = \$2
+                }
+                next
+        }
+        FILENAME == mlst_lookup {
+                if (FNR > 1 && \$1 != "") {
+                        mlst_st[\$1] = \$2
+                }
+                next
+        }
         FNR > 1 {
                 sample = \$1
                 key = \$2 OFS \$3 OFS \$5 OFS \$6
@@ -673,20 +784,36 @@ process report {
                 }
         }
         END {
-                print "SAMPLE", "TYPE", "SUBTYPE", "VARTYPE", "ISOLATE_DATABASE", "CHROM", "POS", "REF", "ALT", "GENE", "PHENOTYPE", "PHENOTYPE_DESCRIPTION", "NOTE"
+                print "SAMPLE", "MLST", "TYPE", "SUBTYPE", "VARTYPE", "ISOLATE_DATABASE", "CHROM", "POS", "REF", "ALT", "GENE", "PHENOTYPE", "PHENOTYPE_DESCRIPTION", "PETG_PRESENT", "NOTE"
                 for (i = 1; i <= row_count; i++) {
                         sample = row_sample[i]
                         idx = row_idx[i]
                         phenotype = choose_phenotype(sample, db_type[idx], db_pheno_default[idx], db_pheno_multi[idx])
                         description = (phenotype in phenotype_description) ? phenotype_description[phenotype] : ""
-                        print sample, db_type[idx], db_subtype[idx], db_vartype[idx], db_isolate[idx], db_chrom[idx], db_pos[idx], db_ref[idx], db_alt[idx], db_gene[idx], phenotype, description, db_note[idx]
+                        print sample, mlst_st[sample], db_type[idx], db_subtype[idx], db_vartype[idx], db_isolate[idx], db_chrom[idx], db_pos[idx], db_ref[idx], db_alt[idx], db_gene[idx], phenotype, description, petg_present[sample], db_note[idx]
                 }
         }
-        ' "\$subtype_db" "\$phenotype_lookup_input" 8_ONT_clair3_snpeff.vcf > 10_ONT_subtype_report.tsv.tmp
+        ' "\$subtype_db" "\$phenotype_lookup_input" petg_lookup.tsv mlst_lookup.tsv 8_ONT_clair3_snpeff.vcf > 10_ONT_subtype_report.tsv.tmp
         awk -F'\t' 'NR > 1 {split(\$2, a, "-"); gsub("LPS", "L", a[1]); print \$1 "\t" a[1]}' "${kaptive_summary}" > kaptive_tmp
         awk -F'\t' 'NR > 1 {print \$1}' 10_ONT_subtype_report.tsv.tmp | sort | uniq > list_samples_clair_exclude
         awk -F'\t' 'NR == FNR {exclude[\$1] = 1; next} !(\$1 in exclude)' list_samples_clair_exclude kaptive_tmp > kaptive_to_keep
-        awk -F'\t' -v OFS='\t' '{print \$1, \$2, "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "", "", ""}' kaptive_to_keep > kaptive_to_keep.tsv
+        awk -F'\t' -v OFS='\t' '
+        FILENAME == "mlst_lookup.tsv" {
+                if (FNR > 1 && \$1 != "") {
+                        mlst_st[\$1] = \$2
+                }
+                next
+        }
+        FILENAME == "petg_lookup.tsv" {
+                if (FNR > 1 && \$1 != "") {
+                        petg_present[\$1] = \$2
+                }
+                next
+        }
+        {
+                print \$1, mlst_st[\$1], \$2, "NA", "NA", "NA", "NA", "NA", "NA", "NA", "NA", "", "", petg_present[\$1], ""
+        }
+        ' mlst_lookup.tsv petg_lookup.tsv kaptive_to_keep > kaptive_to_keep.tsv
         cat 10_ONT_subtype_report.tsv.tmp kaptive_to_keep.tsv > 10_ONT_subtype_report.tsv
         """
 }
@@ -828,6 +955,9 @@ workflow {
                 flye(ch_samplesheet_ONT)
                 if (!params.skip_polishing) {
                         medaka(flye.out.assembly_fasta)
+                        ch_assembly_for_typing = medaka.out.polished_medaka
+                } else if (params.skip_polishing) {
+                        ch_assembly_for_typing = flye.out.assembly_only
                 }
                 summary_flye(flye.out.assembly_info.collect())
         }
@@ -911,12 +1041,24 @@ workflow {
                 sylph_summary_per_sample(sylph_tax_results).map{sample, summary_file -> summary_file }.collect().set{all_sylph_summaries}
                 summary_sylph(all_sylph_summaries)
         }
+        if (!params.skip_mlst) {
+                mlst(ch_assembly_for_typing)
+                summary_mlst(mlst.out.mlst_results.collect())
+                mlst_report_ch = mlst.out.mlst_results.collect()
+        } else {
+                empty_mlst_report_input()
+                mlst_report_ch = empty_mlst_report_input.out.empty_mlst
+        }
         if (!params.skip_kaptive3) {
-                if (!params.skip_polishing) {
-                        kaptive3(medaka.out.polished_medaka)
-                } else if (params.skip_polishing) {
-                        kaptive3(flye.out.assembly_only)
+                if (!params.skip_petg) {
+                        ch_petg_reference = Channel.fromPath("${params.reference_LPS_directory}/petG_X73_NZ_CM001580.fasta", checkIfExists: true)
+                        petg_blast(ch_assembly_for_typing.combine(ch_petg_reference))
+                        petg_report_ch = petg_blast.out.petg_summary.collect()
+                } else {
+                        empty_petg_report_input()
+                        petg_report_ch = empty_petg_report_input.out.empty_petg
                 }
+                kaptive3(ch_assembly_for_typing)
                 summary_kaptive(kaptive3.out.kaptive_tsv.collect())
                 if (!params.skip_clair3) {
                         minimap(ch_samplesheet_ONT.join(kaptive3.out.kaptive_results))
@@ -926,18 +1068,10 @@ workflow {
                                 snpsift(snpeff.out.snpeff_results)
                                 clair_tab_ch=snpsift.out.snpsift_results.collect()
                                 kaptive_summary_ch=summary_kaptive.out.kaptive_summary
-                                report(clair_tab_ch,kaptive_summary_ch)
+                                report(clair_tab_ch,kaptive_summary_ch,petg_report_ch,mlst_report_ch)
                         }
                 }
         }       
-        if (!params.skip_mlst) {
-                if (!params.skip_polishing) {
-                        mlst(medaka.out.polished_medaka)
-                } else if (params.skip_polishing) {
-                        mlst(flye.out.assembly_only)
-                }
-                summary_mlst(mlst.out.mlst_results.collect())
-        }
         if (!params.skip_bakta) {
                 if (!params.skip_download_bakta_db) {
                         download_bakta_db()

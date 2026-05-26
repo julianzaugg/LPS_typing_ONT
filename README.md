@@ -52,7 +52,11 @@ The LPS type of the sample is obtained using the software [Kaptive](https://kapt
 
 The software [mlst](https://github.com/tseemann/mlst) is used to scan the genome assemblies against the  PubMLST typing scheme "pmultocida_2" by default (RIRDC). The typing scheme can be modified by specifying the parameter --mlst_scheme (e.g. --mlst_scheme "pmultocida").   
 
-### 10.  Subtype report
+### 10.  petG detection
+
+The petG reference sequence is searched against the same assembly used for Kaptive typing using BLAST. A sample is reported as petG-positive when a hit has a genomic span greater than 1570 bp and at least 95% identity. Matching hit sequences are written to the sample output directory.
+
+### 11.  Subtype report
 
 The pipeline generates a subtype report file (10_ONT_subtype_report.tsv) summarising the variants found in the subtype database. To be reported, the variant identified by clair3 must be present in the subtype database with the following conditions:  
 - the variant must be identified at the same position in the reference sequence and
@@ -60,11 +64,11 @@ The pipeline generates a subtype report file (10_ONT_subtype_report.tsv) summari
 
 If the subtype database includes `PHENOTYPE_DEFAULT` and `PHENOTYPE_MULTIPLE_SUBTYPES` columns after the `GENE` column, the report also assigns a phenotype for each subtype. Phenotype descriptions are added from `phenotype_lookup.tsv` when this file is present in the LPS reference database directory.
 
-### 11. 	Genome annotation using Bakta
+### 12. 	Genome annotation using Bakta
 
 The software [Bakta](https://github.com/oschwengers/bakta) is used to annotate the genome assemblies. The default database is v6.0 from 2025-02-24, https://zenodo.org/records/14916843.    
 
-### 12. 	Antimicrobial Resistance genes
+### 13. 	Antimicrobial Resistance genes
 
 The software [AMRFinderPlus](https://github.com/ncbi/amr) is used to identify AMR genes in the genome assemblies. The default database is the version 2025-03-25.1 that was downloaded using the command amrfinder_update.    
 
@@ -213,23 +217,30 @@ Some parameters can be added to the command line in order to include or skip som
 * `--clair3_model`: path to the clair3 model folder (default="../../../databases/clair3_models/r1041_e82_400bps_sup_v500")
 * `--clair3_args`: Clair3 optional parameters (default="--haploid_sensitive"), see [available parameters](https://github.com/HKU-BAL/Clair3?tab=readme-ov-file#options)
 * `--skip_snpeff`: skip the variant annotation step (default=false)
-* `--reference_LPS_directory`: The directory containing the reference LPS sequence files (default="../../../databases/LPS"). This directory should also contain `LPS_subtype_database_v2.txt`; if phenotype reporting is used, it should contain `phenotype_lookup.tsv`.
+* `--reference_LPS_directory`: The directory containing the reference LPS sequence files (default="../../../databases/LPS"). This directory should also contain `LPS_subtype_database_v2.txt` and `petG_X73_NZ_CM001580.fasta`; if phenotype reporting is used, it should contain `phenotype_lookup.tsv`.
 
 9. MLST typing:
 * `--skip_mlst`: skip the MLST typing step (default=false)
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
 
-10. Report:
+10. petG detection:
+* `--skip_petg`: skip petG detection with BLAST (default=false)
+* `--petg_threads`: number of threads for the petG BLAST step (default=2)
+* `--petg_min_length`: minimum genomic hit span for petG presence; hits must be greater than this value (default=1570)
+* `--petg_min_identity`: minimum percent identity for petG presence (default=95)
+* `--reference_LPS_directory`: path to the directory containing `petG_X73_NZ_CM001580.fasta` (default="../../../databases/LPS")
+
+11. Report:
 * `--reference_LPS_directory`: path to the subtype database directory (default="../../../databases/LPS"). This directory should contain `LPS_subtype_database_v2.txt` and, for phenotype descriptions, `phenotype_lookup.tsv`.
 
-11. Genome annotation using Bakta:
+12. Genome annotation using Bakta:
 * `--skip_bakta`: skip the genome annotation step (default=false)
 * `--bakta_threads`: number of threads for the Bakta step (default=8)  
 * `--bakta_db`: path to the Bakta database files (default="../../../databases/bakta/db")
 * `--bakta_protein_ref`: path to the trusted protein sequences file for CDS annotation in fasta or GenBank format (CDS features) (default="../../../databases/LPS/L3_NC002663_LPS.gb")  
 * `--bakta_args`: Bakta optional parameters (default="")  
 
-12. AMR genes identification using AMRFinderPlus:
+13. AMR genes identification using AMRFinderPlus:
 * `--skip_amrfinder`: skip the AMR genes identification step (default=false)
 * `--amrfinder_db`: path to the AMRFinderPlus database files (default="../../../databases/amrfinderplus/2025-03-25.1")
 * `--amrfinder_args`: AMRFinderPlus optional parameters (default="")
@@ -261,6 +272,11 @@ Each sample folder will contain the following folders:
     * Clair3 variants annotated by SnpEff (sample_id_clair3.snpeff.vcf)  
     * Frameshift and stop_gained clair3 variants (sample_id_clair3.snpeff.high_impact.vcf). 
 * **9_mlst:** MLST typing output file (sample_id_mlst.csv)
+* **13_petG:** petG BLAST output files
+    * Accepted petG hit sequences (sample_id_petG_hits.fasta)
+    * BLAST tabular output for all hits (sample_id_petG_blast.tsv)
+    * BLAST tabular output for accepted hits (sample_id_petG_blast.filtered.tsv)
+    * petG presence summary (sample_id_petG_summary.tsv)
 * **10_report:** Summary of results for all samples
     * Flye assembly statistics: assembly coverage, number of contigs, assembly size (3_ONT_flye_stats.tsv)  
     * QUAST combined report file (4_ONT_quast_report.tsv)  
@@ -274,6 +290,7 @@ Each sample folder will contain the following folders:
     * MLST results (9_ONT_mlst.csv)  
     * Subtype results summarising the variants found in the subtype database (10_ONT_subtype_report.tsv). The columns in this file represents:
         - SAMPLE: sample identifier (sample_id in the samplesheet)  
+        - MLST: MLST sequence type number
         - TYPE: LPS type assigned by Kaptive  
         - SUBTYPE: LPS subtype assigned by the pipeline (using the subtype database)    
         - VARTYPE: description of the variant   
@@ -285,6 +302,7 @@ Each sample folder will contain the following folders:
         - GENE: gene containing the variant  
         - PHENOTYPE: phenotype label assigned from the subtype database, if available
         - PHENOTYPE_DESCRIPTION: phenotype description from phenotype_lookup.tsv, if available
+        - PETG_PRESENT: "yes" when a qualifying petG BLAST hit is present, blank otherwise
         - NOTE: note from the subtype database
     * AMRFinderPlus results (12_ONT_amrfinder.tsv) 
 * **11_bakta:** Bakta genome annotation output files. The output files are described [here](https://github.com/oschwengers/bakta?tab=readme-ov-file#output).
