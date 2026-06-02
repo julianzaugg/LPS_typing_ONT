@@ -679,6 +679,18 @@ process report {
                 echo -e "\${sample}\\t\${mlst_st}" >> mlst_lookup.tsv
         done
 
+        awk -F'\t' -v OFS='\t' '
+        NR > 1 {
+                if (\$4 == "Typeable") {
+                        split(\$2, a, "-")
+                        gsub("LPS", "L", a[1])
+                        print \$1, a[1]
+                } else {
+                        print \$1, "untypeable"
+                }
+        }
+        ' "${kaptive_summary}" > kaptive_type_lookup.tsv
+
         subtype_db="${params.reference_LPS_directory}/LPS_subtype_database_v2.txt"
         phenotype_lookup="${params.reference_LPS_directory}/phenotype_lookup.tsv"
         if [[ -f "\$phenotype_lookup" ]]; then
@@ -688,7 +700,7 @@ process report {
                 phenotype_lookup_input="phenotype_lookup_empty.tsv"
         fi
 
-        awk -F '\\t' -v OFS='\\t' -v subtype_db="\$subtype_db" -v phenotype_lookup="\$phenotype_lookup_input" -v petg_lookup="petg_lookup.tsv" -v mlst_lookup="mlst_lookup.tsv" '
+        awk -F '\\t' -v OFS='\\t' -v subtype_db="\$subtype_db" -v phenotype_lookup="\$phenotype_lookup_input" -v petg_lookup="petg_lookup.tsv" -v mlst_lookup="mlst_lookup.tsv" -v kaptive_type_lookup="kaptive_type_lookup.tsv" '
         function set_header_fields(    i) {
                 for (i = 1; i <= NF; i++) {
                         header[\$i] = i
@@ -772,6 +784,12 @@ process report {
                 }
                 next
         }
+        FILENAME == kaptive_type_lookup {
+                if (\$1 != "") {
+                        kaptive_type[\$1] = \$2
+                }
+                next
+        }
         FNR > 1 {
                 sample = \$1
                 key = \$2 OFS \$3 OFS \$5 OFS \$6
@@ -790,11 +808,12 @@ process report {
                         idx = row_idx[i]
                         phenotype = choose_phenotype(sample, db_type[idx], db_pheno_default[idx], db_pheno_multi[idx])
                         description = (phenotype in phenotype_description) ? phenotype_description[phenotype] : ""
-                        print sample, mlst_st[sample], db_type[idx], db_subtype[idx], db_vartype[idx], db_isolate[idx], db_chrom[idx], db_pos[idx], db_ref[idx], db_alt[idx], db_gene[idx], phenotype, description, petg_present[sample], db_note[idx]
+                        report_type = (sample in kaptive_type) ? kaptive_type[sample] : db_type[idx]
+                        print sample, mlst_st[sample], report_type, db_subtype[idx], db_vartype[idx], db_isolate[idx], db_chrom[idx], db_pos[idx], db_ref[idx], db_alt[idx], db_gene[idx], phenotype, description, petg_present[sample], db_note[idx]
                 }
         }
-        ' "\$subtype_db" "\$phenotype_lookup_input" petg_lookup.tsv mlst_lookup.tsv 8_ONT_clair3_snpeff.vcf > 10_ONT_subtype_report.tsv.tmp
-        awk -F'\t' 'NR > 1 {split(\$2, a, "-"); gsub("LPS", "L", a[1]); print \$1 "\t" a[1]}' "${kaptive_summary}" > kaptive_tmp
+        ' "\$subtype_db" "\$phenotype_lookup_input" petg_lookup.tsv mlst_lookup.tsv kaptive_type_lookup.tsv 8_ONT_clair3_snpeff.vcf > 10_ONT_subtype_report.tsv.tmp
+        cp kaptive_type_lookup.tsv kaptive_tmp
         awk -F'\t' 'NR > 1 {print \$1}' 10_ONT_subtype_report.tsv.tmp | sort | uniq > list_samples_clair_exclude
         awk -F'\t' 'NR == FNR {exclude[\$1] = 1; next} !(\$1 in exclude)' list_samples_clair_exclude kaptive_tmp > kaptive_to_keep
         awk -F'\t' -v OFS='\t' '

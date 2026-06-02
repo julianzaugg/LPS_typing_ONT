@@ -291,7 +291,7 @@ Each sample folder will contain the following folders:
     * Subtype results summarising the variants found in the subtype database (10_ONT_subtype_report.tsv). The columns in this file represents:
         - SAMPLE: sample identifier (sample_id in the samplesheet)  
         - MLST: MLST sequence type number
-        - TYPE: LPS type assigned by Kaptive  
+        - TYPE: LPS type assigned by Kaptive when the Kaptive match confidence is Typeable, otherwise untypeable
         - SUBTYPE: LPS subtype assigned by the pipeline (using the subtype database)    
         - VARTYPE: description of the variant   
         - ISOLATE_DATABASE: reference isolate from the subtype database that contained that variant  
