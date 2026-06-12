@@ -24,7 +24,7 @@ Bioinformatics pipeline for *Pasteurella multocida* LPS typing using Oxford Nano
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/vmurigneu/LPS_typing_ONT.git
+git clone https://github.com/julianzaugg/LPS_typing_ONT.git
 cd LPS_typing_ONT
 ```
 
@@ -154,12 +154,12 @@ The pipeline uses two types of databases:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/vmurigneu/LPS_typing_ONT.git
+git clone https://github.com/julianzaugg/LPS_typing_ONT.git
 cd LPS_typing_ONT
 ```
 
 The repository contains:
-- **`nextflow.config`** — default parameters and container settings. An example is available [here](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/nextflow.config).
+- **`nextflow.config`** — default parameters and container settings. An example is available [here](https://github.com/julianzaugg/LPS_typing_ONT/blob/main/nextflow.config).
 - **`main.nf`** — pipeline code (not user-modifiable).
 - **`nextflow.sh`** — SLURM submission template. Edit it to set your paths and account name before submitting.
 
@@ -231,10 +231,10 @@ To test the pipeline, test data containing 20,000 Nanopore reads for two samples
 
 File | Description
 ---|---
-[fastq/barcode17.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/fastq/barcode17.simplex_duplex.test.fastq.gz) | ONT reads for barcode17
-[fastq/barcode18.simplex_duplex.test.fastq.gz](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/fastq/barcode18.simplex_duplex.test.fastq.gz) | ONT reads for barcode18
-[samplesheet/samples_test.csv](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/samplesheet/samples_test.csv) | Samplesheet for the test run
-[nextflow.sh](https://github.com/vmurigneu/LPS_typing_ONT/blob/main/nextflow.sh) | SLURM submission template
+[fastq/barcode17.simplex_duplex.test.fastq.gz](https://github.com/julianzaugg/LPS_typing_ONT/blob/main/fastq/barcode17.simplex_duplex.test.fastq.gz) | ONT reads for barcode17
+[fastq/barcode18.simplex_duplex.test.fastq.gz](https://github.com/julianzaugg/LPS_typing_ONT/blob/main/fastq/barcode18.simplex_duplex.test.fastq.gz) | ONT reads for barcode18
+[samplesheet/samples_test.csv](https://github.com/julianzaugg/LPS_typing_ONT/blob/main/samplesheet/samples_test.csv) | Samplesheet for the test run
+[nextflow.sh](https://github.com/julianzaugg/LPS_typing_ONT/blob/main/nextflow.sh) | SLURM submission template
 
 Run the test data:
 ```bash
