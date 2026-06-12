@@ -1,44 +1,54 @@
 #!/bin/bash
-#
 #SBATCH --time=20:00:00
-#SBATCH --job-name=LPS_pipeline_ONT
-#SBATCH --output=./s%j_job.pipeline_ONT.out
-#SBATCH --error=./s%j_job.pipeline_ONT.error
-#SBATCH --account=a_uqds
-#SBATCH --partition=general
+#SBATCH --job-name=LPS_typing_ONT
+#SBATCH --output=./%j_pipeline_ONT.out
+#SBATCH --error=./%j_pipeline_ONT.err
+#SBATCH --account=YOUR_ACCOUNT
+#SBATCH --partition=YOUR_PARTITION
 #SBATCH --nodes=1
 #SBATCH --tasks-per-node=1
 #SBATCH --cpus-per-task=1
 
-module load nextflow/23.04.2
+# Path to samplesheet CSV (FASTQ paths are relative to the Nextflow launch directory)
+SAMPLESHEET=/path/to/samplesheet/samples.csv
 
-# Directory containing the nextflow.config file and the main.nf script
-dir=/my/project/directory/LPS/ONT
-cd ${dir}
+# Directory where results will be written
+OUTDIR=/path/to/results
 
-# Samplesheet file
-samplesheet=${dir}/samplesheet/samples_test.csv
+# Run the full pipeline (databases will be downloaded on first run)
+nextflow run main.nf \
+  -profile apptainer,slurm \
+  --samplesheet ${SAMPLESHEET} \
+  --outdir ${OUTDIR} \
+  --slurm_account YOUR_ACCOUNT \
+  -resume
 
-# Directory that will be created to contain the output files
-out_dir=${dir}/results
+# If databases have already been downloaded, add the skip flags:
+# nextflow run main.nf \
+#   -profile apptainer,slurm \
+#   --samplesheet ${SAMPLESHEET} \
+#   --outdir ${OUTDIR} \
+#   --slurm_account YOUR_ACCOUNT \
+#   --skip_download_checkm_db true \
+#   --skip_download_sylph_db true \
+#   --skip_download_bakta_db true \
+#   --skip_download_amrfinder_db true \
+#   -resume
 
-# Bunya Slurm account 
-slurm_account='a_uqds'
-
-##ii) Typing workflow
-#directory containing the Nanopore basecalled fastq files
-fqdir=${dir}/fastq
-nextflow main.nf --outdir ${out_dir} --fqdir ${fqdir} --samplesheet ${samplesheet} -resume --slurm_account ${slurm_account}
-
-# Add -resume to continue a run if interrupted
-# include --skip_download_... if databases have already been downloaded
-nextflow run main.nf -profile singularity -resume --outdir ${out_dir} --fqdir ${fqdir} --samplesheet ${samplesheet} -c nextflow_custom.config \
---skip_download_checkm_db true --skip_download_sylph_db true --skip_download_bakta_db true --skip_download_amrfinder_db true \
---slurm_account ${slurm_account}
-
-# If you just want a (sub)type assignment, you can skip most of the annotation steps.
-# You will need an assembly, but can skip polishing (though this may influence the subtyping)
-# nextflow run main.nf -profile singularity -resume --outdir ${out_dir} --fqdir ${fqdir} --samplesheet ${samplesheet} -c nextflow_custom.config \
-# --skip_download_checkm_db true --skip_download_sylph_db true --skip_download_bakta_db true --skip_download_amrfinder_db true \
-# --skip_polishing true --skip_mlst true --skip_quast true --skip_checkm true --skip_bakta true --skip_amrfinder true \
-# --slurm_account ${slurm_account}
+# Typing-only run (skips most annotation steps):
+# nextflow run main.nf \
+#   -profile apptainer,slurm \
+#   --samplesheet ${SAMPLESHEET} \
+#   --outdir ${OUTDIR} \
+#   --slurm_account YOUR_ACCOUNT \
+#   --skip_download_checkm_db true \
+#   --skip_download_sylph_db true \
+#   --skip_download_bakta_db true \
+#   --skip_download_amrfinder_db true \
+#   --skip_polishing true \
+#   --skip_mlst true \
+#   --skip_quast true \
+#   --skip_checkm true \
+#   --skip_bakta true \
+#   --skip_amrfinder true \
+#   -resume
