@@ -114,6 +114,8 @@ The pipeline generates a subtype report file (`10_ONT_subtype_report.tsv`) summa
 
 If the subtype database includes `PHENOTYPE_DEFAULT` and `PHENOTYPE_MULTIPLE_SUBTYPES` columns after the `GENE` column, the report also assigns a phenotype for each subtype. Phenotype descriptions are added from `phenotype_lookup.tsv` when this file is present in the LPS reference database directory.
 
+The pipeline also generates a self-contained HTML summary report (`LPS_typing_report.html`) from the combined `10_report` outputs when Kaptive and Clair3 are enabled. See the "Combined HTML report" parameters and the `10_report` entry under the output folders below for details.
+
 ### 12. Genome annotation using Bakta
 
 The software [Bakta](https://github.com/oschwengers/bakta) is used to annotate the genome assemblies. The default database is v6.0 from 2025-02-24, https://zenodo.org/records/14916843.
@@ -389,7 +391,7 @@ Each sample folder will contain the following folders:
     - PETG_PRESENT: "yes" when a qualifying petG BLAST hit is present, blank otherwise
     - NOTE: note from the subtype database
   * AMRFinderPlus results (`12_ONT_amrfinder.tsv`)
-  * Combined HTML report (`LPS_typing_report.html`) — a single self-contained file (all figures and images embedded; no network needed to view) that ties together the aggregated outputs above. It includes a run overview, a searchable/sortable genome summary table, distribution charts (hidden for single-genome runs), a gallery of the observed LPS phenotype diagrams, a lollipop plot per LPS type (gene track plus the mutations observed in this run, with lollipop height = number of genomes carrying each mutation), a QC detail table with a link to the NanoComp read-QC report (`../2_nanocomp/NanoComp-report.html`), an AMR summary, and collapsible per-genome detail. Disable with `--skip_html_report true`.
+  * Combined HTML report (`LPS_typing_report.html`) — a single self-contained file (all figures and images embedded; no network needed to view) that ties together the aggregated outputs above. It includes a run overview, a searchable/sortable genome summary table, distribution charts (hidden for single-genome runs), a gallery of the observed LPS phenotype diagrams, per-LPS-type lollipop plots, a QC detail table with a link to the NanoComp read-QC report (`../2_nanocomp/NanoComp-report.html`), an AMR summary, and collapsible per-genome detail. The per-LPS-type lollipop plots show the mutations observed across the run (lollipop height = number of genomes carrying each mutation); hovering a lollipop or gene shows its details, a gene-colour legend accompanies each plot, and the full mutation list is available in a collapsible table beneath it. The report is generated when `--skip_html_report false`, `--skip_kaptive3 false`, and `--skip_clair3 false`. Disable with `--skip_html_report true`.
 * **11_bakta:** Bakta genome annotation output files, see [details](https://github.com/oschwengers/bakta?tab=readme-ov-file#output).
   * Annotations & sequences in (multi) GenBank format (`sample_id_bakta.gbff`)
   * Inference metrics as TSV (`sample_id_bakta.inference.tsv`)
