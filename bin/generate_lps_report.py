@@ -52,7 +52,7 @@ EXPECTED_SPECIES = "pasteurella multocida"
 NA_VALUES = {"", "NA", "na", "N/A", ".", "-"}
 
 # Deterministic fallback gene-track palette (used when gene_colors.tsv absent or
-# a gene is missing from it). Ordered to roughly echo the collaborator's figures.
+# a gene is missing from it).
 FALLBACK_PALETTE = [
     "#D85A30", "#378ADD", "#7F77DD", "#639922", "#BA7517",
     "#E24B4A", "#1D9E75", "#D4537E", "#888780", "#4682B4",

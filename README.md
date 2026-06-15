@@ -327,7 +327,7 @@ Some parameters can be added to the command line in order to include or skip som
 
 The report draws two optional conventions from the LPS reference database directory (`--reference_LPS_directory`, default `<pipeline_dir>/databases/LPS`):
 * `phenotype_images/`: phenotype diagrams named `<PHENOTYPE>.<png|svg|jpg>` (e.g. `L3_P4.png`). A `template.png` is ignored, and a phenotype with no matching image renders as "no image available".
-* `gene_colors.tsv` (optional): a `GENE<TAB>HEX` map used to colour the lollipop gene tracks to match the collaborator's figures. Genes not listed fall back to a deterministic palette.
+* `gene_colors.tsv` (optional): a `GENE<TAB>HEX` map assigning a fixed colour to each gene in the lollipop gene tracks. Genes not listed fall back to a deterministic palette.
 
 ---
 
