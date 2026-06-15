@@ -837,6 +837,31 @@ process report {
         """
 }
 
+process html_report {
+        publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*.html'
+        input:
+                path(report_inputs)
+                val(pipeline_version)
+                val(skipped_steps)
+                val(param_note)
+                val(readqc_link)
+        output:
+                path("LPS_typing_report.html"), emit: html_report
+        when:
+        !params.skip_html_report && !params.skip_clair3 && !params.skip_kaptive3
+        script:
+        """
+        generate_lps_report.py \\
+                --report-dir . \\
+                --lps-db-dir ${params.reference_LPS_directory} \\
+                --out LPS_typing_report.html \\
+                --pipeline-version "${pipeline_version}" \\
+                --skipped "${skipped_steps}" \\
+                --params "${param_note}" \\
+                --readqc-link "${readqc_link}"
+        """
+}
+
 process mlst {
         cpus "${params.threads}"
         tag "${sample}"
@@ -1126,5 +1151,38 @@ workflow {
                         } 
                 }
                 summary_amrfinder(amrfinder.out.amrfinder_results.collect())
+        }
+        // Build the single combined HTML report from the aggregated 10_report outputs.
+        // The LPS database directory is read directly via params.reference_LPS_directory,
+        // so only the aggregated TSV/HTML files need to be staged here. This is placed at
+        // the end of the workflow because it consumes the late summary_* outputs
+        // (amrfinder etc.). It is guarded on the same condition that gates the `report`
+        // process so report.out.subtype_report is only referenced when it exists.
+        if (!params.skip_kaptive3 && !params.skip_clair3 && !params.skip_snpeff) {
+                html_inputs_ch = report.out.subtype_report.flatten()
+                        .mix(summary_kaptive.out.kaptive_summary)
+                if (!params.skip_assembly)  html_inputs_ch = html_inputs_ch.mix(summary_flye.out.flye_summary)
+                if (!params.skip_quast)     html_inputs_ch = html_inputs_ch.mix(summary_quast.out.quast_summary)
+                if (!params.skip_checkm)    html_inputs_ch = html_inputs_ch.mix(summary_checkm.out.checkm_summary)
+                if (!params.skip_sylph)     html_inputs_ch = html_inputs_ch.mix(summary_sylph.out.sylph_summary)
+                if (!params.skip_mlst)      html_inputs_ch = html_inputs_ch.mix(summary_mlst.out.mlst_summary)
+                if (!params.skip_amrfinder) html_inputs_ch = html_inputs_ch.mix(summary_amrfinder.out.amrfinder_summary)
+
+                skipped_list = []
+                if (params.skip_nanocomp)  skipped_list << 'nanocomp'
+                if (params.skip_assembly)  skipped_list << 'flye'
+                if (params.skip_quast)     skipped_list << 'quast'
+                if (params.skip_checkm)    skipped_list << 'checkm'
+                if (params.skip_sylph)     skipped_list << 'sylph'
+                if (params.skip_mlst)      skipped_list << 'mlst'
+                if (params.skip_petg)      skipped_list << 'petG'
+                if (params.skip_amrfinder) skipped_list << 'amrfinder'
+                if (params.skip_bakta)     skipped_list << 'bakta'
+                param_note_str = "MLST scheme: ${params.mlst_scheme}; petG reported present when a hit spans > ${params.petg_min_length} bp at >= ${params.petg_min_identity}% identity"
+                // NanoComp is published to results/2_nanocomp/ (a different publishDir) and is
+                // NOT staged into this work dir, so the link is emitted unconditionally
+                // (relative to 10_report/) rather than gated on file existence.
+                readqc_link = params.skip_nanocomp ? '' : '../2_nanocomp/NanoComp-report.html'
+                html_report(html_inputs_ch.collect(), workflow.manifest.version, skipped_list.join(', '), param_note_str, readqc_link)
         }
 }

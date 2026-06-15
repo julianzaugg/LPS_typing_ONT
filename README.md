@@ -320,6 +320,13 @@ Some parameters can be added to the command line in order to include or skip som
 * `--amrfinder_db`: path to the AMRFinderPlus database files (default=`<pipeline_dir>/databases/amrfinderplus/2025-03-25.1`)
 * `--amrfinder_args`: AMRFinderPlus optional parameters (default="")
 
+14. Combined HTML report:
+* `--skip_html_report`: skip generation of the combined `LPS_typing_report.html` (default=false). The report also requires the LPS typing and variant-calling steps, so it is skipped automatically if `--skip_kaptive3` or `--skip_clair3` is set.
+
+The report draws two optional conventions from the LPS reference database directory (`--reference_LPS_directory`, default `<pipeline_dir>/databases/LPS`):
+* `phenotype_images/`: phenotype diagrams named `<PHENOTYPE>.<png|svg|jpg>` (e.g. `L3_P4.png`). A `template.png` is ignored, and a phenotype with no matching image renders as "no image available".
+* `gene_colors.tsv` (optional): a `GENE<TAB>HEX` map used to colour the lollipop gene tracks to match the collaborator's figures. Genes not listed fall back to a deterministic palette.
+
 ---
 
 ## Structure of the output folders
@@ -382,6 +389,7 @@ Each sample folder will contain the following folders:
     - PETG_PRESENT: "yes" when a qualifying petG BLAST hit is present, blank otherwise
     - NOTE: note from the subtype database
   * AMRFinderPlus results (`12_ONT_amrfinder.tsv`)
+  * Combined HTML report (`LPS_typing_report.html`) — a single self-contained file (all figures and images embedded; no network needed to view) that ties together the aggregated outputs above. It includes a run overview, a searchable/sortable genome summary table, distribution charts (hidden for single-genome runs), a gallery of the observed LPS phenotype diagrams, a lollipop plot per LPS type (gene track plus the mutations observed in this run, with lollipop height = number of genomes carrying each mutation), a QC detail table with a link to the NanoComp read-QC report (`../2_nanocomp/NanoComp-report.html`), an AMR summary, and collapsible per-genome detail. Disable with `--skip_html_report true`.
 * **11_bakta:** Bakta genome annotation output files, see [details](https://github.com/oschwengers/bakta?tab=readme-ov-file#output).
   * Annotations & sequences in (multi) GenBank format (`sample_id_bakta.gbff`)
   * Inference metrics as TSV (`sample_id_bakta.inference.tsv`)

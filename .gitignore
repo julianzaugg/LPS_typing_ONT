@@ -1,4 +1,5 @@
 data_dump*/
-phenotype*/
+work*/
+.venv_report/
 .DS_Store
 *handoff.md
