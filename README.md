@@ -19,7 +19,7 @@ Bioinformatics pipeline for *Pasteurella multocida* LPS typing using Oxford Nano
 ## Quick start
 
 **Requirements:**
-- [Nextflow](https://www.nextflow.io/) ≥ 23.04
+- [Nextflow](https://www.nextflow.io/) ≥ 25.04.6
 - [Singularity](https://sylabs.io/singularity/) or [Apptainer](https://apptainer.org/) (the pipeline uses containers for all tools)
 
 **1. Clone the repository**
