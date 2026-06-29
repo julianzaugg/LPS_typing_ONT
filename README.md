@@ -112,7 +112,7 @@ The pipeline generates a subtype report file (`10_ONT_subtype_report.tsv`) summa
 - the variant must be identified at the same position in the reference sequence, and
 - both the reference allele and the alternate allele must match their corresponding allele from the variant in the database.
 
-If the subtype database includes `PHENOTYPE_DEFAULT` and `PHENOTYPE_MULTIPLE_SUBTYPES` columns after the `GENE` column, the report also assigns a phenotype for each subtype. Phenotype descriptions are added from `phenotype_lookup.tsv` when this file is present in the LPS reference database directory.
+If the subtype database includes `PHENOTYPE_DEFAULT` and `PHENOTYPE_MULTIPLE_SUBTYPES` columns after the `GENE` column, the report also assigns a predicted phenotype for each subtype. Predicted phenotype descriptions are added from `phenotype_lookup.tsv` when this file is present in the LPS reference database directory.
 
 The pipeline also generates a self-contained HTML summary report (`LPS_typing_report.html`) from the combined `10_report` outputs when Kaptive and Clair3 are enabled. See the "Combined HTML report" parameters and the `10_report` entry under the output folders below for details.
 
@@ -326,7 +326,7 @@ Some parameters can be added to the command line in order to include or skip som
 * `--skip_html_report`: skip generation of the combined `LPS_typing_report.html` (default=false). The report also requires the LPS typing and variant-calling steps, so it is skipped automatically if `--skip_kaptive3` or `--skip_clair3` is set.
 
 The report draws two optional conventions from the LPS reference database directory (`--reference_LPS_directory`, default `<pipeline_dir>/databases/LPS`):
-* `phenotype_images/`: phenotype diagrams named `<PHENOTYPE>.<png|svg|jpg>` (e.g. `L3_P4.png`). A `template.png` is ignored, and a phenotype with no matching image renders as "no image available".
+* `phenotype_images/`: predicted phenotype diagrams named `<PREDICTED_PHENOTYPE>.<png|svg|jpg>` (e.g. `L3_P4.png`). A `template.png` is ignored, and a predicted phenotype with no matching image renders as "no image available".
 * `gene_colors.tsv` (optional): a `GENE<TAB>HEX` map assigning a fixed colour to each gene in the lollipop gene tracks. Genes not listed fall back to a deterministic palette.
 
 ---
@@ -386,8 +386,8 @@ Each sample folder will contain the following folders:
     - REF: reference allele sequence present in the LPS reference sequence
     - ALT: alternate allele sequence identified in the sample
     - GENE: gene containing the variant
-    - PHENOTYPE: phenotype label assigned from the subtype database, if available
-    - PHENOTYPE_DESCRIPTION: phenotype description from `phenotype_lookup.tsv`, if available
+    - PREDICTED_PHENOTYPE: predicted phenotype label assigned from the subtype database, if available
+    - PREDICTED_PHENOTYPE_DESCRIPTION: description of the predicted phenotype from `phenotype_lookup.tsv`, if available
     - PETG_PRESENT: "yes" when a qualifying petG BLAST hit is present, blank otherwise
     - NOTE: note from the subtype database
   * AMRFinderPlus results (`12_ONT_amrfinder.tsv`)
