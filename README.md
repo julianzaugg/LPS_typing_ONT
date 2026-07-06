@@ -383,7 +383,7 @@ The subtype report uses `LPS_subtype_database_v2.txt` and, when present, `phenot
 * `--bakta_threads`: number of threads for the Bakta step (default=8)
 * `--skip_download_bakta_db`: skip downloading the Bakta database (default=true)
 * `--bakta_db`: path to the Bakta database files (default=`<pipeline_dir>/databases/bakta/db`)
-* `--bakta_args`: Bakta optional parameters (default includes trusted protein sequences from the LPS database)
+* `--bakta_args`: additional Bakta parameters (default="")
 
 ### 13. AMR gene identification using AMRFinderPlus
 
