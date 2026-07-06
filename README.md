@@ -85,7 +85,7 @@ The software [CheckM](https://github.com/Ecogenomics/CheckM) v1 (command [lineag
 
 ### 6. Sylph taxonomy classification
 
-Nanopore reads are used as input to the taxonomy classifier [Sylph](https://sylph-docs.github.io). Both the GTDB R226 and RefSeq Fungi databases were downloaded from https://sylph-docs.github.io/pre%E2%80%90built-databases/.
+Nanopore reads are used as input to the taxonomy classifier [Sylph](https://sylph-docs.github.io). Both the GTDB R232 and RefSeq Fungi databases were downloaded from https://sylph-docs.github.io/pre%E2%80%90built-databases/.
 
 ### 7. LPS typing using Kaptive
 
@@ -142,7 +142,7 @@ The pipeline uses two types of databases:
 | Database | Required for | Default path | Tested version | Source |
 |----------|-------------|-------------|---------------|--------|
 | CheckM | Assembly quality | `<pipeline_dir>/databases/checkm_data_2015_01_16` | `checkm_data_2015_01_16` | [CheckM installation docs](https://github.com/Ecogenomics/CheckM/wiki/Installation) |
-| Sylph GTDB + Fungi | Taxonomy classification | `<pipeline_dir>/databases/sylph/` | GTDB R226, Fungi RefSeq 2024-07-25 | [Sylph pre-built databases](https://sylph-docs.github.io/pre%E2%80%90built-databases/) |
+| Sylph GTDB + Fungi | Taxonomy classification | `<pipeline_dir>/databases/sylph/` | GTDB R232, Fungi RefSeq 2025-10-11 | [Sylph pre-built databases](https://sylph-docs.github.io/pre%E2%80%90built-databases/) |
 | Clair3 model | Variant calling | `<pipeline_dir>/databases/clair3_models/r1041_e82_400bps_sup_v500` | `r1041_e82_400bps_sup_v500` | [Rerio models](https://github.com/nanoporetech/rerio/tree/master/clair3_models) — manual download |
 | Bakta | Genome annotation | `<pipeline_dir>/databases/bakta/db` | v6.0 (2025-02-24) | [Zenodo 10.5281/zenodo.14916843](https://zenodo.org/records/14916843) |
 | AMRFinderPlus | AMR gene identification | `<pipeline_dir>/databases/amrfinderplus/2025-03-25.1` | `2025-03-25.1` | [NCBI AMRFinderPlus](https://github.com/ncbi/amr/wiki/AMRFinderPlus-database) |
