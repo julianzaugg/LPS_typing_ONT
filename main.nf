@@ -256,7 +256,7 @@ process sylph_download_db {
         script:
         """
         echo "${db}"
-        wget -c "${db}"
+        wget -c --tries=5 --waitretry=30 "${db}"
         """
 }
 
@@ -292,7 +292,7 @@ process sylph_tax_download_metadata {
         !params.skip_download_sylph_db
         script:
         """
-        wget -c "${metadata_file}" -O \$PWD/\$(basename $metadata_file)
+        wget -c --tries=5 --waitretry=30 "${metadata_file}" -O \$PWD/\$(basename $metadata_file)
         #wget "https://zenodo.org/records/15314244/files/gtdb_r226_metadata.tsv.gz" -O \$PWD/gtdb_r226_metadata.tsv.gz
         #wget "https://zenodo.org/records/14320496/files/fungi_refseq_2024-07-25_metadata.tsv.gz" -O \$PWD/fungi_refseq_2024-07-25_metadata.tsv.gz
         #sylph-tax download --download-to \$PWD
