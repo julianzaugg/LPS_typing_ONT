@@ -101,7 +101,7 @@ process medaka {
         tag "${sample}"
         label "medaka"
         label "cpu"
-        publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: '*fasta', saveAs: { filename -> "${sample}_$filename"}
+        publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "${sample}_flye_polished.fasta"
         publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: '*log', saveAs: { filename -> "${sample}_$filename" }
         publishDir "$params.outdir/$sample/3_assembly",  mode: 'copy', pattern: "*_version.txt" 
         input:
