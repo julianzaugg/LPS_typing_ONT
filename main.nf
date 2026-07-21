@@ -20,11 +20,10 @@ def helpMessage() {
         =========================================
         Usage:
         Typing workflow
-        nextflow main.nf --samplesheet --samplesheet /path/to/samples.csv --fqdir /path/to/fastq/directory/ --outdir /path/to/outdir/ --slurm_account account
+        nextflow main.nf --samplesheet /path/to/samples.csv --outdir /path/to/outdir/ --slurm_account account
 
         Required arguments:
                 --samplesheet                           Path to the samplesheet file
-                --fqdir                                 Path to the directory containing the fastq files
                 --outdir                                Path to the output directory to be created
                 --slurm_account                         Name of the Bunya account (default='a_uqds')
 
