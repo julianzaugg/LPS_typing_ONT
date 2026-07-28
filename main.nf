@@ -883,7 +883,7 @@ process mlst {
         script:
         """
         mlst --scheme ${params.mlst_scheme} ${assembly} --quiet --csv --threads ${params.threads} > mlst.csv
-        mv mlst.csv ${sample}_mlst.csv
+        sed  s/_flye_polished.fasta// mlst.csv > ${sample}_mlst.csv
         cp .command.log mlst.log
         """
 }
@@ -898,7 +898,7 @@ process summary_mlst {
         !params.skip_mlst
         script:
         """
-        for file in `ls *_mlst.csv`; do fileName=\$(basename \$file); sample=\${fileName%%_mlst.csv};  sed s/^/\${sample}_/ \$file >> 9_ONT_mlst.csv; done
+        for file in `ls *_mlst.csv`; do fileName=\$(basename \$file); sample=\${fileName%%_mlst.csv}; cat \$file >> 9_ONT_mlst.csv; done
         """
 }
 
