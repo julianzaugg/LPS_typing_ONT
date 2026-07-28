@@ -173,7 +173,7 @@ process summary_flye {
         !params.skip_assembly
         script:
         """
-        echo -e "sample\tasssembly_coverage\tnb_contigs\tassembly_size" > 3_ONT_flye_stats.tsv
+        echo -e "sample\tassembly_coverage\tnb_contigs\tassembly_size" > 3_ONT_flye_stats.tsv
         for file in `ls *info.txt`; do
                 fileName=\$(basename \$file)
                 sample=\${fileName%%_assembly_info.txt}
