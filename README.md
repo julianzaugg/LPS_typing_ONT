@@ -404,9 +404,6 @@ The report draws two optional conventions from the LPS reference database direct
 ## Structure of the output folders
 
 The pipeline will create several folders corresponding to the different steps of the pipeline.
-* **2_nanocomp:** Quality control of the Nanopore reads
-  * Full Nanocomp report in HTML format with plots and metrics table (NanoComp-report.html)
-  * Nanocomp summary text file (NanoStats.txt)
 
 The main output folder (`--outdir`) will contain one folder per sample (named by the `sample_id` column in the samplesheet).
 
@@ -441,6 +438,7 @@ Each sample folder will contain the following folders:
 
 The `10_report` folder contains combined results across all samples:
 
+* NanoComp report (`2_ONT_nanocomp_report.html`) and summary statistics (`2_ONT_nanostats.txt`) — quality control of the Nanopore reads
 * Flye assembly statistics: assembly coverage, number of contigs, assembly size (`3_ONT_flye_stats.tsv`)
 * QUAST combined report file (`4_ONT_quast_report.tsv`)
 * CheckM results (`5_ONT_checkm_lineage_wf_results.tsv`)

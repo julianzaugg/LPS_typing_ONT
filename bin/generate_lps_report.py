@@ -43,6 +43,7 @@ F_FLYE = "3_ONT_flye_stats.tsv"
 F_CHECKM = "5_ONT_checkm_lineage_wf_results.tsv"
 F_SYLPH = "6_ONT_sylph_summary.tsv"
 F_AMR = "12_ONT_amrfinder.tsv"
+F_NANOCOMP = "2_ONT_nanocomp_report.html"
 
 # QC thresholds for warning flags.
 COMPLETENESS_MIN = 90.0
@@ -986,11 +987,6 @@ def main(argv=None):
     ap.add_argument("--skipped", default="", help="Comma-separated steps skipped.")
     ap.add_argument("--params", default="", help="Free-text note of key parameters.")
     ap.add_argument("--run-date", default="", help="Override report date (YYYY-MM-DD).")
-    ap.add_argument("--readqc-link", default="",
-                    help="Relative link to the NanoComp read-QC report "
-                         "(e.g. ../2_nanocomp/NanoComp-report.html). The link is "
-                         "rendered as-is and not checked for existence (NanoComp "
-                         "is published outside the report work dir).")
     args = ap.parse_args(argv)
 
     rdir = args.report_dir
@@ -1080,7 +1076,7 @@ def main(argv=None):
         pheno_gallery=pheno_gallery, lollipops=lollipops,
         type_counts=type_counts, pheno_counts=pheno_counts,
         n_flagged=n_flagged, has_amr=has_amr,
-        readqc=clean(args.readqc_link) or None,
+        readqc=F_NANOCOMP if (rdir / F_NANOCOMP).exists() else None,
     )
     args.out.write_text(html, encoding="utf-8")
     sys.stderr.write(f"wrote {args.out} ({len(records)} genomes, "

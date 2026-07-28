@@ -40,15 +40,16 @@ if (params.help){
 process nanocomp {
         cpus "${params.threads}"
         label "cpu"
-        publishDir "$params.outdir/2_nanocomp",  mode: 'copy', pattern: '*log'
-        publishDir "$params.outdir/2_nanocomp",  mode: 'copy', pattern: '*txt'
-        publishDir "$params.outdir/2_nanocomp",  mode: 'copy', pattern: '*html'
+        publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*log'
+        publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*txt'
+        publishDir "$params.outdir/10_report",  mode: 'copy', pattern: '*html'
         input:
                 val(sampleID_list)
                 path(fastq_files)
         output:
-                tuple path("NanoStats.txt"), path("NanoComp-report.html"), emit: nanocomp_results
-                path("nanocomp.log")
+                path("2_ONT_nanocomp_report.html"), emit: nanocomp_html
+                path("2_ONT_nanostats.txt"), emit: nanocomp_stats
+                path("2_ONT_nanocomp.log")
         when:
         !params.skip_nanocomp
         script:
@@ -58,7 +59,9 @@ process nanocomp {
         sed  "s/\\[//" sampleID_list.txt | sed "s/\\]//" | sed "s/\\,//g" > sample_list
         sampleID_list_names=\$(cat "sample_list")
         NanoComp -o \$PWD --fastq ${fastq_files} -t ${params.threads} -n \${sampleID_list_names}
-        cp .command.log nanocomp.log
+        mv NanoStats.txt 2_ONT_nanostats.txt
+        mv NanoComp-report.html 2_ONT_nanocomp_report.html
+        cp .command.log 2_ONT_nanocomp.log
         """
 }
 
@@ -849,7 +852,6 @@ process html_report {
                 val(pipeline_version)
                 val(skipped_steps)
                 val(param_note)
-                val(readqc_link)
         output:
                 path("LPS_typing_report.html"), emit: html_report
         when:
@@ -862,8 +864,7 @@ process html_report {
                 --out LPS_typing_report.html \\
                 --pipeline-version "${pipeline_version}" \\
                 --skipped "${skipped_steps}" \\
-                --params "${param_note}" \\
-                --readqc-link "${readqc_link}"
+                --params "${param_note}"
         """
 }
 
@@ -1166,6 +1167,7 @@ workflow {
         if (!params.skip_kaptive3 && !params.skip_clair3 && !params.skip_snpeff) {
                 html_inputs_ch = report.out.subtype_report.flatten()
                         .mix(summary_kaptive.out.kaptive_summary)
+                if (!params.skip_nanocomp)  html_inputs_ch = html_inputs_ch.mix(nanocomp.out.nanocomp_html)
                 if (!params.skip_assembly)  html_inputs_ch = html_inputs_ch.mix(summary_flye.out.flye_summary)
                 if (!params.skip_quast)     html_inputs_ch = html_inputs_ch.mix(summary_quast.out.quast_summary)
                 if (!params.skip_checkm)    html_inputs_ch = html_inputs_ch.mix(summary_checkm.out.checkm_summary)
@@ -1184,10 +1186,6 @@ workflow {
                 if (params.skip_amrfinder) skipped_list << 'amrfinder'
                 if (params.skip_bakta)     skipped_list << 'bakta'
                 param_note_str = "MLST scheme: ${params.mlst_scheme}; petG reported present when a hit spans > ${params.petg_min_length} bp at >= ${params.petg_min_identity}% identity"
-                // NanoComp is published to results/2_nanocomp/ (a different publishDir) and is
-                // NOT staged into this work dir, so the link is emitted unconditionally
-                // (relative to 10_report/) rather than gated on file existence.
-                readqc_link = params.skip_nanocomp ? '' : '../2_nanocomp/NanoComp-report.html'
-                html_report(html_inputs_ch.collect(), workflow.manifest.version, skipped_list.join(', '), param_note_str, readqc_link)
+                html_report(html_inputs_ch.collect(), workflow.manifest.version, skipped_list.join(', '), param_note_str)
         }
 }
