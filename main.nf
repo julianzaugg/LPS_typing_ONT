@@ -873,11 +873,11 @@ process mlst {
         tag "${sample}"
         label "cpu"
         publishDir "$params.outdir/$sample/9_mlst",  mode: 'copy', pattern: "*.log", saveAs: { filename -> "${sample}_$filename" }
-        publishDir "$params.outdir/$sample/9_mlst",  mode: 'copy', pattern: '*csv'
+        publishDir "$params.outdir/$sample/9_mlst",  mode: 'copy', pattern: '*_mlst.csv'
         input:
                 tuple val(sample), path(assembly)
         output:
-                path("*mlst.csv"),  emit: mlst_results
+                path("*_mlst.csv"),  emit: mlst_results
                 path("mlst.log")
         when:
         !params.skip_mlst
