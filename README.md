@@ -102,6 +102,25 @@ The LPS type of the sample is obtained using the software [Kaptive](https://kapt
 
 [mlst](https://github.com/tseemann/mlst) v2.33.1 scans the genome assemblies against the PubMLST typing scheme `pmultocida_2` by default (RIRDC). The typing scheme can be modified by specifying `--mlst_scheme` (e.g. `--mlst_scheme pmultocida`).
 
+The database bundled inside the mlst container is frozen at the time of the container build. PubMLST now requires a login to download updated alleles and profiles, so the tool's built-in update mechanism no longer works. To use the latest scheme, download files manually and supply them via `--mlst_datadir` (see below).
+
+#### Updating the MLST database
+
+1. Log in to [PubMLST](https://pubmlst.org/organisms/pasteurella-multocida) and navigate to the **pmultocida_2 (RIRDC)** scheme.
+2. Download allele sequences for each of the 7 loci (`RIRDC_adk`, `RIRDC_est`, `RIRDC_gdh`, `RIRDC_mdh`, `RIRDC_pgi`, `RIRDC_pmi`, `RIRDC_zwf`). PubMLST provides these as `<locus>.fas` FASTA files.
+3. Download the allele profiles as `pmultocida_2.txt`.
+4. Place all files in `databases/mlst_db/pmultocida_2/`:
+   ```
+   databases/mlst_db/pmultocida_2/
+     RIRDC_adk.fas
+     RIRDC_est.fas
+     ...
+     pmultocida_2.txt
+   ```
+5. Run the pipeline with `--mlst_datadir databases/mlst_db`. On first run, the pipeline automatically renames allele files to the `.tfa` extension that mlst expects, and builds the BLAST index. The prepared database is saved to `databases/mlst_db_prepared/`. Use `-resume` on subsequent runs to skip rebuilding.
+
+A pre-downloaded database (2026-08-18) is included at `databases/mlst_db/`.
+
 ### 10. petG detection
 
 [BLAST](https://blast.ncbi.nlm.nih.gov/Blast.cgi) v2.17.0 searches the assembly for *petG* using the reference sequence `petG_X73_NZ_CM001580.fasta` (included in `databases/LPS/`). A sample is reported as petG-positive when a hit has a genomic span greater than 1570 bp and at least 95% identity. Matching hit sequences are written to the sample output directory.
@@ -371,6 +390,7 @@ nextflow run main.nf \
 
 * `--skip_mlst`: skip the MLST typing step (default=false)
 * `--mlst_scheme`: MLST typing scheme (default="pmultocida_2")
+* `--mlst_datadir`: path to a directory of custom MLST scheme files (default="" = use bundled database). The directory must contain a subdirectory named after the scheme (matching `--mlst_scheme`) holding allele FASTA files (`*.fas` from PubMLST, or `*.tfa`) and a `<scheme>.txt` profile. File renaming and BLAST indexing are handled automatically by the pipeline.
 
 ### 10. petG detection
 
