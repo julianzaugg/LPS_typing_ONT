@@ -987,7 +987,6 @@ workflow {
         .splitCsv(header:true, sep:',')
         .map { row -> tuple(row.sample_id, file(row.long_fastq, checkIfExists: true)) }
         .set { ch_samplesheet_ONT }
-        ch_samplesheet_ONT.view()
         Channel.fromPath( "${params.samplesheet}", checkIfExists:true )
         .splitCsv(header:true, sep:',')
         .map { row -> file(row.long_fastq, checkIfExists: true) }
