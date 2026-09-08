@@ -10,6 +10,7 @@ Bioinformatics pipeline for *Pasteurella multocida* LPS typing using Oxford Nano
 - [Example data](#example-data)
 - [Optional parameters](#optional-parameters)
 - [Output files](#structure-of-the-output-folders)
+- [Publication figures](#publication-figures)
 - [Advanced use](#advanced-use)
 - [Troubleshooting](#troubleshooting)
 - [Acknowledgements / citations / credits](#acknowledgements--citations--credits)
@@ -494,7 +495,57 @@ The `10_report` folder contains combined results across all samples:
   * **PETG_PRESENT**: petG presence (`yes` when present, blank otherwise)
   * **NOTE**: subtype database note for the matched variant, when available
 * AMRFinderPlus combined results (`12_ONT_amrfinder.tsv`)
-* Self-contained HTML summary report (`LPS_typing_report.html`) with sample-level LPS calls, QC summaries, phenotype information, and variant/locus visualisations. This report is generated when `--skip_html_report false`, `--skip_kaptive3 false`, and `--skip_clair3 false`. The per-LPS-type lollipop plots show the mutations observed across the run (lollipop height = number of genomes carrying each mutation); hovering a lollipop or gene shows its details, a gene-colour legend accompanies each plot, and the full mutation list is available in a collapsible table beneath it.
+* Self-contained HTML summary report (`LPS_typing_report.html`) with sample-level LPS calls, QC summaries, phenotype information, and variant/locus visualisations. This report is generated when `--skip_html_report false`, `--skip_kaptive3 false`, and `--skip_clair3 false`. The per-LPS-type lollipop plots show the mutations observed across the run (lollipop height = number of genomes carrying each mutation); the gene track below each plot is drawn as directional arrows, so gene orientation on the locus is visible at a glance. Hovering a lollipop or gene shows its details, a gene-colour legend accompanies each plot, and the full mutation list is available in a collapsible table beneath it. For publication-quality PDF/SVG versions of these plots see [Publication figures](#publication-figures).
+
+---
+
+## Publication figures
+
+`bin/plot_lps_mutations.R` draws the per-LPS-type mutation lollipops as standalone
+vector files for use in papers.
+Each figure shows the same data as the HTML report (lollipop height = number of genomes carrying the mutation)
+above a directional gene-arrow map of the reference locus, with gene direction taken from the `complement(...)`
+annotation in the LPS database GenBank files.
+
+This script is run by hand against a finished results directory.
+It is not part of the Nextflow workflow and does not use a container.
+
+Requirements (R, once):
+
+```bash
+Rscript -e 'install.packages(c("ggplot2", "dplyr", "scales", "svglite"))'
+```
+
+Alternatively pass `--install-deps` and the script installs whatever is missing.
+
+Basic use, writing one PDF and one SVG per LPS type into `figures/`:
+
+```bash
+Rscript bin/plot_lps_mutations.R \
+  --report-dir results/10_report \
+  --lps-db-dir databases/LPS \
+  --outdir figures
+```
+
+Common options:
+
+```bash
+# a single LPS type, colour-blind-safe palette, also write the plotted variants as TSV
+Rscript bin/plot_lps_mutations.R --report-dir results/10_report --lps-db-dir databases/LPS \
+  --outdir figures --types L3 --palette okabe-ito --write-table
+
+# one genome only (every lollipop is then height 1: a per-genome mutation map)
+Rscript bin/plot_lps_mutations.R --report-dir results/10_report --lps-db-dir databases/LPS \
+  --outdir figures --samples PM1205
+
+# combine an Illumina and an ONT run in one figure (genomes present in both are counted once)
+Rscript bin/plot_lps_mutations.R --lps-db-dir databases/LPS --outdir figures \
+  --subtype-report illumina_run/10_report/10_Illumina_subtype_report.tsv,ont_run/10_report/10_ONT_subtype_report.tsv
+```
+
+`--help` lists every option, including `--min-genomes`, `--exclude-samples`, `--legend`,
+`--gene-colors`, `--font`, `--width`/`--height`, `--prefix` and `--formats`.
+Gene colours default to `gene_colors.tsv` in the LPS database, so the figures match the HTML report.
 
 ---
 
