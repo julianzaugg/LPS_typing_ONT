@@ -62,6 +62,8 @@ sbatch nextflow.sh
 
 ## Overall pipeline
 
+![Pipeline overview](pipeline_flowchart.svg)
+
 ### 1. Basecalling
 
 The basecalling and demultiplexing step are performed by the user outside of the pipeline.
