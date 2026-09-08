@@ -7,7 +7,7 @@ nextflow.enable.dsl=2
         Pasteurella multocida LPS analysis pipeline
 ========================================================================================
  #### Documentation
- #https://github.com/vmurigneu/LPS_typing
+ #https://github.com/julianzaugg/LPS_typing
  #### Authors
  Valentine Murigneux <v.murigneux@uq.edu.au>
  Julian Zaugg <j.zaugg@uq.edu.au>
