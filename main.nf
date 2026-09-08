@@ -10,6 +10,7 @@ nextflow.enable.dsl=2
  #https://github.com/vmurigneu/LPS_typing
  #### Authors
  Valentine Murigneux <v.murigneux@uq.edu.au>
+ Julian Zaugg <j.zaugg@uq.edu.au>
 ========================================================================================
 */
 
