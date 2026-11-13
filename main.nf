@@ -692,6 +692,8 @@ process report {
                 --mlst \$(ls *_mlst.csv 2>/dev/null) \\
                 --vcf *_clair3.snpeff.vcf \\
                 --vcf-suffix _clair3.snpeff.vcf \\
+                --called *_clair3.snpeff.vcf \\
+                --called-suffix _clair3.snpeff.vcf \\
                 --coverage *_depth.tsv \\
                 --coverage-suffix _depth.tsv \\
                 --min-coverage ${params.phenotype_min_gene_coverage} \\
